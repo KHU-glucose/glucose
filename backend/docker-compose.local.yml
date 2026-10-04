@@ -1,0 +1,15 @@
+# 로컬 개발용 DB. 앱은 IntelliJ/터미널에서 직접 실행 (./gradlew bootRun)
+# 사용: docker compose -f docker-compose.local.yml up -d
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: glucose
+      POSTGRES_USER: glucose
+      POSTGRES_PASSWORD: glucose
+    ports:
+      - "127.0.0.1:5432:5432"     # 내 컴퓨터에서만 접속
+    volumes:
+      - pg_local:/var/lib/postgresql/data
+volumes:
+  pg_local:

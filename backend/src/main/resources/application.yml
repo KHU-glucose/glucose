@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: glucose-backend
+  datasource:
+    # 운영에서는 compose가 SPRING_DATASOURCE_* 환경변수로 덮어씀
+    url: jdbc:postgresql://localhost:5432/glucose
+    username: glucose
+    password: glucose
+    hikari:
+      maximum-pool-size: 8        # 서버 메모리가 작아서 작게 유지
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate          # 스키마는 Flyway만 바꾼다
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+  jackson:
+    time-zone: Asia/Seoul
+
+server:
+  port: 8080
+  shutdown: graceful
+  forward-headers-strategy: framework   # Caddy 뒤에서 X-Forwarded-* 인식
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
+# 건강정보 앱: 요청 본문, 토큰, 혈당값을 로그에 남기지 않는다
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: WARN
+
+ml:
+  service-url: ${ML_SERVICE_URL:http://localhost:8000}
+  internal-token: ${ML_INTERNAL_TOKEN:dev-token}
