@@ -6,3 +6,19 @@ __pycache__/
 *.pyc
 
 IMPLEMENTATION_LOG_2026-10-05.md
+
+# Local credentials and configuration
+.env
+.env.*
+!.env.example
+.aws/
+.codex/
+
+# Local tools and temporary files
+.tools/
+node_modules/
+Thumbs.db
+Desktop.ini
+.DS_Store
+~$*
+*.tmp
