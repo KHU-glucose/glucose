@@ -1,0 +1,2 @@
+fastapi[standard]==0.142.2
+Pillow==12.3.0
