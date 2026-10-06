@@ -67,6 +67,7 @@ class PhotoFlowTest {
         registry.add("r2.access-key-id", () -> ACCESS_KEY);
         registry.add("r2.secret-access-key", () -> SECRET_KEY);
         registry.add("r2.photo-bucket", () -> BUCKET);
+        registry.add("job.scheduling-enabled", () -> false);
     }
 
     @BeforeAll

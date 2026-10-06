@@ -6,6 +6,7 @@ import java.time.Duration;
 import org.springframework.stereotype.Service;
 
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -14,7 +15,7 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
-/** R2(S3 호환) 버킷에 대한 presigned PUT 발급과 업로드 완료 확인(HEAD)만 담당한다. */
+/** R2(S3 호환) 버킷에 대한 presigned PUT 발급, 업로드 완료 확인(HEAD), job 워커용 다운로드(GET)를 담당한다. */
 @Service
 public class PhotoStorageService {
 
@@ -57,5 +58,13 @@ public class PhotoStorageService {
             }
             throw e;
         }
+    }
+
+    public byte[] download(String objectKey) {
+        return s3Client.getObjectAsBytes(GetObjectRequest.builder()
+                        .bucket(properties.photoBucket())
+                        .key(objectKey)
+                        .build())
+                .asByteArray();
     }
 }
