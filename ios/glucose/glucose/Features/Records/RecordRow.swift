@@ -42,7 +42,7 @@ struct RecordRow: View {
 
     private var subtitle: String {
         let time = item.occurredAt.formatted(date: .omitted, time: .shortened)
-        switch item {
+        return switch item {
         case .intake(let record): "\(record.context.displayName) · \(time)"
         case .insulin(let record): "\(record.kind) · \(time)"
         }
