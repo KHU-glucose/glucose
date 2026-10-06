@@ -16,7 +16,8 @@ from fastapi.responses import JSONResponse
 from PIL import Image, UnidentifiedImageError
 
 from food_recognizer import FoodRecognizer, FoodRecognizerFailure, OpenAIFoodRecognizer
-from models import ErrorResponse, FoodRecognitionResponse
+from graph_parser import GraphParseFailure, LibreDailyGraphParser
+from models import ErrorResponse, FoodRecognitionResponse, GraphParseResponse
 
 
 load_dotenv()
@@ -48,6 +49,11 @@ def get_food_recognizer() -> FoodRecognizer:
     return OpenAIFoodRecognizer()
 
 
+@lru_cache
+def get_graph_parser() -> LibreDailyGraphParser:
+    return LibreDailyGraphParser()
+
+
 app = FastAPI(title="Glucose Log ML Service", version="1.0.0")
 
 
@@ -67,7 +73,7 @@ async def service_error_handler(request: Request, error: ServiceError):
 async def request_validation_error_handler(request: Request, error: RequestValidationError):
     request_id = getattr(request.state, "request_id", str(uuid.uuid4()))
     missing_image = any(item.get("loc", ())[-1:] == ("image",) for item in error.errors())
-    if request.url.path == "/v1/food/recognize" and missing_image:
+    if request.url.path in {"/v1/food/recognize", "/v1/graph/parse"} and missing_image:
         return JSONResponse(
             status_code=400,
             content=ErrorResponse(
@@ -225,3 +231,33 @@ async def recognize_food(
         **result.payload.model_dump(),
         meta=result.meta,
     )
+
+
+@app.post(
+    "/v1/graph/parse",
+    response_model=GraphParseResponse,
+    dependencies=[Depends(verify_internal_token)],
+    responses={
+        400: {"model": ErrorResponse, "description": "INVALID_IMAGE"},
+        401: {"model": ErrorResponse, "description": "UNAUTHORIZED"},
+        422: {
+            "model": ErrorResponse,
+            "description": "GRAPH_NOT_RECOGNIZED or TOO_LITTLE_DATA",
+        },
+    },
+)
+async def parse_graph(
+    request: Request,
+    image: UploadFile = File(...),
+    parser: LibreDailyGraphParser = Depends(get_graph_parser),
+):
+    request_id = request.state.request_id
+    image_bytes, _ = await validate_and_prepare_image(image, request_id)
+    try:
+        async with PROCESSING_LIMIT:
+            result = await asyncio.to_thread(parser.parse, image_bytes)
+    except GraphParseFailure as error:
+        status_code = 400 if error.code == "INVALID_IMAGE" else 422
+        raise ServiceError(status_code, error.code, error.message, request_id) from error
+
+    return GraphParseResponse(request_id=request_id, **result)

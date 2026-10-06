@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class PackagedProduct(BaseModel):
@@ -70,6 +70,38 @@ class FoodRecognitionResponse(FoodRecognitionPayload):
             ]
         }
     )
+
+
+class GraphReading(BaseModel):
+    time: str
+    value: int | None
+    flag: Literal["NORMAL", "ABOVE_RANGE", "BELOW_RANGE", "MISSING"]
+
+
+class GraphGap(BaseModel):
+    from_time: str = Field(alias="from")
+    to: str
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class GraphParseMeta(BaseModel):
+    parser_version: str
+    image_width: int
+    image_height: int
+    latency_ms: int
+
+
+class GraphParseResponse(BaseModel):
+    request_id: str
+    date: str
+    source: Literal["LIBRE_DAILY_GRAPH"] = "LIBRE_DAILY_GRAPH"
+    unit: Literal["mg/dL"] = "mg/dL"
+    interval_minutes: Literal[15] = 15
+    readings: list[GraphReading]
+    gaps: list[GraphGap]
+    coverage_ratio: float
+    meta: GraphParseMeta
 
 
 class ErrorResponse(BaseModel):
