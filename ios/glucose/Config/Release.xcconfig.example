@@ -8,4 +8,3 @@
 // 아래처럼 $()(빈 변수 치환)로 슬래시 두 개를 떼어놓아야 한다.
 
 API_BASE_URL = https:/$()/REPLACE_WITH_PRODUCTION_DOMAIN
-INFOPLIST_KEY_API_BASE_URL = $(API_BASE_URL)
