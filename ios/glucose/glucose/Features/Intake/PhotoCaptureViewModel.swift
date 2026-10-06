@@ -2,9 +2,13 @@
 //  PhotoCaptureViewModel.swift
 //  glucose
 //
+//  PhotosUI 타입은 일부러 안 쓴다 - 사진 선택/로드는 View(PhotoCaptureView)가 하고,
+//  여기엔 UIImage만 넘어온다. (PhotosPickerItem을 여기서 직접 쓰면 "Cannot find type
+//  'PhotosPickerItem' in scope" 빌드 에러가 나는 걸 실기기에서 확인함 — 원인 불명이라
+//  PhotosUI 의존 자체를 View로 옮겨 피해감)
+//
 
 import Foundation
-import PhotosUI
 import UIKit
 
 @Observable
@@ -34,17 +38,8 @@ final class PhotoCaptureViewModel {
         processedSizeDescription = ByteCountFormatter.string(fromByteCount: Int64(data.count), countStyle: .file)
     }
 
-    func loadFromPicker(_ item: PhotosPickerItem?) async {
-        guard let item else { return }
-        do {
-            guard let data = try await item.loadTransferable(type: Data.self), let image = UIImage(data: data) else {
-                errorMessage = "사진을 불러오지 못했습니다."
-                return
-            }
-            process(image)
-        } catch {
-            errorMessage = "사진을 불러오지 못했습니다."
-        }
+    func setError(_ message: String) {
+        errorMessage = message
     }
 
     func reset() {

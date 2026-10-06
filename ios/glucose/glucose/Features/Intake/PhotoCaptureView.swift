@@ -87,7 +87,7 @@ struct PhotoCaptureView: View {
                 .ignoresSafeArea()
             }
             .onChange(of: photosPickerItem) { _, newItem in
-                Task { await viewModel.loadFromPicker(newItem) }
+                Task { await loadPickedImage(newItem) }
             }
             .interactiveDismissDisabled(isUploadInFlight)
         }
@@ -137,6 +137,19 @@ struct PhotoCaptureView: View {
             return "다시 시도"
         }
         return "업로드"
+    }
+
+    private func loadPickedImage(_ item: PhotosPickerItem?) async {
+        guard let item else { return }
+        do {
+            guard let data = try await item.loadTransferable(type: Data.self), let image = UIImage(data: data) else {
+                viewModel.setError("사진을 불러오지 못했습니다.")
+                return
+            }
+            viewModel.process(image)
+        } catch {
+            viewModel.setError("사진을 불러오지 못했습니다.")
+        }
     }
 
     private func startUpload() {
