@@ -45,6 +45,13 @@ logging:
 ml:
   service-url: ${ML_SERVICE_URL:http://localhost:8000}
   internal-token: ${ML_INTERNAL_TOKEN:dev-token}
+  connect-timeout-ms: 2000
+  read-timeout-ms: 10000     # food/recognize 계약상 제한 시간(10초) 기준
+
+job:
+  poll-interval-ms: 5000
+  batch-size: 5
+  retry-backoff-seconds: 10   # 재시도 간격 = 10s * 시도 횟수(단순 선형 백오프)
 
 apple:
   client-id: ${APPLE_CLIENT_ID:com.glucose.glucose}
