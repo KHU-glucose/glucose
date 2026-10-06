@@ -40,6 +40,9 @@ public class IntakePhoto {
     @Column(name = "uploaded_at")
     private Instant uploadedAt;
 
+    @Column(name = "recognition_job_id")
+    private UUID recognitionJobId;
+
     protected IntakePhoto() {
     }
 
@@ -56,6 +59,10 @@ public class IntakePhoto {
     public void markUploaded(Instant now) {
         this.status = PhotoStatus.UPLOADED;
         this.uploadedAt = now;
+    }
+
+    public void setRecognitionJobId(UUID recognitionJobId) {
+        this.recognitionJobId = recognitionJobId;
     }
 
     public UUID getId() {
@@ -88,5 +95,9 @@ public class IntakePhoto {
 
     public Instant getUploadedAt() {
         return uploadedAt;
+    }
+
+    public UUID getRecognitionJobId() {
+        return recognitionJobId;
     }
 }

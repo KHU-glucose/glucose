@@ -10,7 +10,7 @@ AI는 "무엇을 몇 개 먹었는지"까지만 인식한다. 당류·처치 판
 backend/      Spring Boot 3.5, Java 21, Gradle  ← Dave 담당
 ml-service/   FastAPI(Python 3.12)               ← 팀원 담당 (현재 /health만 있는 임시 서비스)
 jaehyun/      팀원의 독립 프로토타입 (계약과 다름: 영양 수치 반환. 팀원 허락 후 삭제 예정, 그 전엔 건드리지 않음)
-ios/          SwiftUI 앱 (아직 비어 있음)
+ios/          SwiftUI 앱 (I0/I1 완료: 뼈대 + 기록 Mock 화면)
 .github/workflows/deploy.yml   main push → test → build(amd64) → GHCR → SSH 배포
 docs/ml-service-contract.md    ml-service API 계약서 (정답 문서)
 AI_use_organize/               경진대회 제출용 AI 활용 기록 (건드리지 말 것)
@@ -51,9 +51,9 @@ AI_use_organize/               경진대회 제출용 AI 활용 기록 (건드�
 - 이 저장소가 공개 상태일 수 있으니 서버 IP, 도메인, 키를 코드·문서에 쓰지 않는다.
 
 ## 현재 상태와 다음 할 일
-- 완료: 서버·DB·R2 백업·CI/CD, Spring 골격(health 테스트 통과), PR #1(ml-service 음식 인식 mock) 머지, PR #3(A1 저장소 위생) 머지, PR #4(B1 Sign in with Apple + JWT 발급/회전, `/v1/auth/apple`·`/v1/auth/refresh`·`DELETE /v1/me`) 머지, `docs/backend-api.md`(iOS↔백엔드 API 규약) 추가. PR #2(design)는 닫힘.
-- 진행: **상세 작업 순서는 `docs/backend-plan.md`** (Phase B 백엔드 기능, B1까지 완료). 다음은 B2(사진 업로드).
-- 다음: B2 사진 업로드(R2 presigned URL) → B3 job 워커 + ml-service 연동 → B4 기록 CRUD → B5 혈당 그래프 → B6 에피소드 분석 → B7 리포트.
+- 백엔드 완료(머지): A1, B0(`docs/backend-api.md`), B1(Sign in with Apple + JWT), B2(사진 업로드 R2 presigned URL), B3(job 워커 + ml-service 연동, 업로드 완료→음식 인식 job 자동 적재), B4(intake/insulin_event CRUD, `food_catalog` 시드, `GET /v1/photos/{id}/recognition`).
+- iOS 완료(머지): I0(뼈대, 탭 4개), I1(기록 목록·상세 + Mock Repository).
+- 진행: **상세 작업 순서는 `docs/backend-plan.md`**(백엔드), `ios-plan.md`(iOS, Downloads에 있던 원본 — 필요하면 저장소에 추가 검토). 다음 백엔드는 B5(혈당 그래프), iOS는 I2(Sign in with Apple — Bundle ID `com.glucose.glucose`, Apple Developer 계정 준비됨, **실기기 테스트 필요**).
 - 비용: AWS 크레딧(Free Tier)으로 Lightsail $12/월 차감 예정. 크레딧 소진 시점 확인 필요.
 - 미결정: 저장소 공개 여부(경진대회 요건 확인 후 private 전환 검토 — 지금은 public 유지), 그래프 파서 담당 범위/진행 상황(B5 일정 좌우), 그래프 재업로드 정책(덮어쓰기 vs 버전).
 
