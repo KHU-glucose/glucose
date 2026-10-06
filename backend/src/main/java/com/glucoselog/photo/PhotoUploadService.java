@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.glucoselog.common.ApiException;
+import com.glucoselog.job.Job;
 import com.glucoselog.job.JobService;
 
 @Service
@@ -60,10 +61,11 @@ public class PhotoUploadService {
         }
 
         photo.markUploaded(Instant.now());
-        repository.save(photo);
 
         // ml-service 호출은 워커가 비동기로 처리한다 — 이 요청 스레드는 기다리지 않는다.
-        jobService.enqueue(FoodRecognizeJobHandler.JOB_TYPE, Map.of("photo_id", photo.getId().toString()));
+        Job job = jobService.enqueue(FoodRecognizeJobHandler.JOB_TYPE, Map.of("photo_id", photo.getId().toString()));
+        photo.setRecognitionJobId(job.getId());
+        repository.save(photo);
     }
 
     private static String extensionOf(String contentType) {

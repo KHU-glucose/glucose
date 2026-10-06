@@ -43,8 +43,8 @@ public class JobService {
     /** FOR UPDATE SKIP LOCKED로 처리할 job을 가져오면서 동시에 PROCESSING으로 바꾼다(같은 트랜잭션). */
     @Transactional
     public List<Job> claimDueJobs() {
-        List<Job> jobs = jobRepository.findDueForProcessing(properties.batchSize());
         Instant now = Instant.now();
+        List<Job> jobs = jobRepository.findDueForProcessing(now, properties.batchSize());
         jobs.forEach(job -> job.markProcessing(now));
         return jobs;
     }

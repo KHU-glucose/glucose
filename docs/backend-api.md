@@ -41,7 +41,7 @@ ml-service와의 계약은 `docs/ml-service-contract.md`를 본다. 이 문서�
 | 422 | 요청은 올바르지만 처리할 수 없음 (예: ml-service 쪽 `TOO_LITTLE_DATA`, `GRAPH_NOT_RECOGNIZED`) |
 | 500 | 서버 오류 (`INTERNAL_ERROR`) |
 
-현재 정의된 `code` 목록은 8번 표를 본다.
+현재 정의된 `code` 목록은 13번 표를 본다.
 
 ## 4. 페이지네이션 (cursor)
 
@@ -108,7 +108,123 @@ Apple이 발급한 identity token을 검증해 `app_user`를 upsert하고 자체
 
 응답: `204 No Content`. 이후 해당 access/refresh 토큰은 모두 무효가 된다.
 
-## 8. 오류 코드 목록 (현재까지)
+## 8. `POST /v1/photos` — 사진 업로드 시작 (B2)
+
+R2(S3 호환) presigned PUT URL을 발급한다. **앱이 이 URL로 R2에 직접 업로드하며, 서버는 바이트를 중계하지 않는다.**
+
+요청:
+```json
+{ "content_type": "image/jpeg", "context": "MEAL" }
+```
+- `content_type`: `image/jpeg` 또는 `image/png`만 허용
+- `context`: 선택, `MEAL` `SNACK` `HYPO_TREATMENT` `ALCOHOL` 중 하나 (ml-service 계약과 동일)
+
+응답 201:
+```json
+{ "photo_id": "<uuid>", "upload_url": "<presigned PUT URL>", "object_key": "photos/...", "expires_in": 600 }
+```
+
+앱은 `upload_url`로 이미지 바이트를 `PUT`(헤더 `Content-Type`을 요청 시 보낸 값과 동일하게)한 뒤, 아래 완료 통보를 호출한다.
+
+## 9. `POST /v1/photos/{photoId}/complete` — 사진 업로드 완료 통보 (B2)
+
+요청 본문 없음. R2에 실제로 객체가 올라왔는지 서버가 확인한 뒤 완료 처리하고, 음식 인식을 백그라운드 job으로 큐에 넣는다(응답은 ml-service를 기다리지 않고 바로 간다).
+
+응답: `204 No Content`
+
+| 오류 | code | 원인 |
+|---|---|---|
+| 404 | `PHOTO_NOT_FOUND` | 본인 소유가 아니거나 없는 사진 (존재 여부를 구분해 알려주지 않음) |
+| 409 | `PHOTO_NOT_UPLOADED` | R2에 실제 업로드가 안 된 상태에서 완료만 호출함 |
+
+## 10. `GET /v1/photos/{photoId}/recognition` — 음식 인식 결과 조회 (B4)
+
+업로드 완료 후 큐에 들어간 음식 인식 job의 결과를 조회한다. ml-service 응답(`docs/ml-service-contract.md`)에서 백엔드가 쓰는 필드만 추린 모양이다.
+
+응답 200:
+```json
+{
+  "is_food_photo": true,
+  "items": [
+    { "name": "초콜릿", "count": 3, "unit": "조각", "category_hint": "FAST_SUGAR", "tags": ["HIGH_FAT"], "confidence": "high" }
+  ],
+  "likely_consumed_all": true
+}
+```
+
+이 결과를 사용자가 확인·수정한 뒤 `POST /v1/intakes`로 최종 확정한다 (AI 값은 제안일 뿐, 수정값이 우선).
+
+| 오류 | code | HTTP | 원인 |
+|---|---|---|---|
+| `PHOTO_NOT_FOUND` | 404 | 본인 소유가 아니거나 없는 사진 |
+| `RECOGNITION_NOT_READY` | 409 | 아직 완료 통보 전이거나, job이 아직 대기/처리 중 |
+| `RECOGNITION_FAILED` | 422 | ml-service 호출이 재시도를 다 썼는데도 실패함 |
+
+## 11. 기록(intake) CRUD (B4)
+
+식사·간식·저혈당 처치·음주 기록. 사진 없이도(수동 입력) 만들 수 있다.
+
+### `POST /v1/intakes`
+```json
+{
+  "context": "MEAL",
+  "occurred_at": "2026-10-01T08:00:00Z",
+  "photo_id": "선택, 사진에서 만든 기록이면 전달",
+  "items": [
+    { "name": "초콜릿", "count": 3, "unit": "조각" },
+    { "name": "콜라", "count": 1, "unit": "캔", "category_hint": "DRINK", "tags": [] }
+  ]
+}
+```
+- 항목별로 `category_hint`/`tags`를 **보내면 사용자가 직접 정한 값으로 우선 적용**된다 (AI 제안이나 `food_catalog` 매칭보다 우선).
+- `category_hint`를 보내지 않으면 `food_catalog`에서 이름으로 찾아 채운다. 둘 다 없으면 분류 없음(`null`)으로 저장된다.
+- `sugar_grams`(당류)는 요청으로 보낼 수 없다 — 항상 `food_catalog` 매칭으로 서버가 계산한다.
+
+응답 201: 아래 모양 (목록/상세 공통)
+```json
+{
+  "id": "<uuid>",
+  "context": "MEAL",
+  "occurred_at": "2026-10-01T08:00:00Z",
+  "photo_id": null,
+  "items": [
+    { "id": "<uuid>", "name": "초콜릿", "count": 3, "unit": "조각", "category_hint": "FAST_SUGAR", "tags": ["HIGH_FAT"], "sugar_grams": 12.0 }
+  ],
+  "created_at": "...", "updated_at": "..."
+}
+```
+
+### `GET /v1/intakes` — 목록 (cursor, 최신순)
+### `GET /v1/intakes/{id}` — 상세
+### `PATCH /v1/intakes/{id}` — 수정 (요청 모양은 생성과 동일. **항목 전체를 교체**한다, 부분 수정 아님)
+### `DELETE /v1/intakes/{id}` — 삭제
+
+| 오류 | code | HTTP |
+|---|---|---|
+| `INTAKE_NOT_FOUND` | 404 | 본인 소유가 아니거나 없는 기록 |
+
+## 12. 인슐린 기록 CRUD (B4)
+
+입력만 저장한다. **용량 조언·판단은 하지 않는다.**
+
+### `POST /v1/insulin-events`
+```json
+{ "occurred_at": "2026-10-01T08:05:00Z", "units": 6, "kind": "식사" }
+```
+- `units`는 0보다 커야 한다. `kind`는 자유 텍스트(예: "식사", "기저")
+
+응답 201: `{ "id", "occurred_at", "units", "kind", "created_at", "updated_at" }`
+
+### `GET /v1/insulin-events` — 목록 (cursor, 최신순)
+### `GET /v1/insulin-events/{id}` — 상세
+### `PATCH /v1/insulin-events/{id}` — 수정
+### `DELETE /v1/insulin-events/{id}` — 삭제
+
+| 오류 | code | HTTP |
+|---|---|---|
+| `INSULIN_EVENT_NOT_FOUND` | 404 | 본인 소유가 아니거나 없는 기록 |
+
+## 13. 오류 코드 목록 (현재까지)
 
 | code | HTTP | 설명 |
 |---|---|---|
@@ -118,13 +234,17 @@ Apple이 발급한 identity token을 검증해 `app_user`를 upsert하고 자체
 | `INVALID_REFRESH_TOKEN` | 401 | refresh 토큰 없음 |
 | `EXPIRED_REFRESH_TOKEN` | 401 | refresh 토큰 만료 |
 | `REFRESH_TOKEN_REUSED` | 401 | refresh 토큰 재사용 감지 (전체 세션 폐기) |
+| `PHOTO_NOT_FOUND` | 404 | 사진 없음/본인 소유 아님 |
+| `PHOTO_NOT_UPLOADED` | 409 | R2 업로드 전에 완료 통보함 |
+| `RECOGNITION_NOT_READY` | 409 | 음식 인식 job이 아직 대기/처리 중 |
+| `RECOGNITION_FAILED` | 422 | 음식 인식이 재시도 후에도 실패 |
+| `INTAKE_NOT_FOUND` | 404 | 기록 없음/본인 소유 아님 |
+| `INSULIN_EVENT_NOT_FOUND` | 404 | 인슐린 기록 없음/본인 소유 아님 |
 | `INTERNAL_ERROR` | 500 | 서버 오류 |
 
-이후 단계(사진 업로드, 기록, 그래프, 리포트)에서 추가되는 코드는 해당 PR에서 이 표에 이어 추가한다.
+이후 단계(그래프, 리포트)에서 추가되는 코드는 해당 PR에서 이 표에 이어 추가한다.
 
-## 9. 앞으로 추가될 것 (문서 자리만 미리 잡아둠)
+## 14. 앞으로 추가될 것 (문서 자리만 미리 잡아둠)
 
-- 사진 업로드: presigned PUT URL 발급, 완료 통보 (B2)
-- 식사·인슐린 기록 CRUD (B4)
 - 혈당 그래프 업로드 (B5)
 - 일일·주간 리포트 (B7)
