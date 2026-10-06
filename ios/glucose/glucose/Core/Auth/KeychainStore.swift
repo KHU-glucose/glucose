@@ -10,7 +10,7 @@ import Security
 
 struct KeychainStore {
 
-    private let service = "com.glucose.glucose.auth"
+    private let service = "com.glubee.glubee.auth"
 
     func set(_ value: String, for key: String) {
         let data = Data(value.utf8)

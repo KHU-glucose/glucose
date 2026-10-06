@@ -54,7 +54,7 @@ job:
   retry-backoff-seconds: 10   # 재시도 간격 = 10s * 시도 횟수(단순 선형 백오프)
 
 apple:
-  client-id: ${APPLE_CLIENT_ID:com.glucose.glucose}
+  client-id: ${APPLE_CLIENT_ID:com.glubee.glubee}
   issuer: https://appleid.apple.com
   keys-url: https://appleid.apple.com/auth/keys
 
