@@ -30,6 +30,8 @@ dependencies {
     implementation 'org.flywaydb:flyway-database-postgresql'
     runtimeOnly 'org.postgresql:postgresql'
 
+    implementation 'com.nimbusds:nimbus-jose-jwt:10.10'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.springframework.boot:spring-boot-testcontainers'
