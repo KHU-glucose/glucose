@@ -1,0 +1,5 @@
+// 이 파일을 복사해서 Debug.xcconfig를 만든다 (Debug.xcconfig는 커밋되지 않음).
+// $ cp Config/Debug.xcconfig.example Config/Debug.xcconfig
+
+API_BASE_URL = http://localhost:8080
+INFOPLIST_KEY_API_BASE_URL = $(API_BASE_URL)

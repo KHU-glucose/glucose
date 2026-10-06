@@ -8,6 +8,9 @@
 *.pem
 *.key
 *.p12
+*.mobileprovision
+ios/glucose/Config/*.xcconfig
+!ios/glucose/Config/*.xcconfig.example
 
 # 건강정보 (혈당 CSV, 그래프, 음식 사진 등)
 *.csv
@@ -22,6 +25,11 @@ samples/
 # 빌드 산출물
 build/
 .gradle/
+
+# Xcode
+xcuserdata/
+DerivedData/
+*.xcuserstate
 
 # 파이썬
 .venv/
