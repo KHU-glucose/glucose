@@ -66,7 +66,7 @@ class PhotoFlowTest {
         registry.add("r2.endpoint", PhotoFlowTest::endpoint);
         registry.add("r2.access-key-id", () -> ACCESS_KEY);
         registry.add("r2.secret-access-key", () -> SECRET_KEY);
-        registry.add("r2.bucket-photos", () -> BUCKET);
+        registry.add("r2.photo-bucket", () -> BUCKET);
     }
 
     @BeforeAll

@@ -30,7 +30,7 @@ public class PhotoStorageService {
 
     public URL presignPut(String objectKey, String contentType) {
         PutObjectRequest putRequest = PutObjectRequest.builder()
-                .bucket(properties.bucketPhotos())
+                .bucket(properties.photoBucket())
                 .key(objectKey)
                 .contentType(contentType)
                 .build();
@@ -45,7 +45,7 @@ public class PhotoStorageService {
     public boolean exists(String objectKey) {
         try {
             s3Client.headObject(HeadObjectRequest.builder()
-                    .bucket(properties.bucketPhotos())
+                    .bucket(properties.photoBucket())
                     .key(objectKey)
                     .build());
             return true;
