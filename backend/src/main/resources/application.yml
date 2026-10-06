@@ -56,3 +56,11 @@ jwt:
   secret: ${JWT_SECRET:dev-only-insecure-secret-change-me-32bytes+}
   access-token-ttl-seconds: 900     # 15분
   refresh-token-ttl-days: 30
+
+r2:
+  # 로컬 기본값은 docker-compose.local.yml의 s3mock(S3 호환, 자격증명 검증 안 함). 운영에서는 R2_* 환경변수로 덮어쓴다
+  endpoint: ${R2_ENDPOINT:http://localhost:9000}
+  access-key-id: ${R2_ACCESS_KEY_ID:test}
+  secret-access-key: ${R2_SECRET_ACCESS_KEY:test}
+  bucket-photos: ${R2_BUCKET_PHOTOS:glucose-photos}
+  presign-ttl-seconds: 600    # 10분
