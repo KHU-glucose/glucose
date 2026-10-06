@@ -51,10 +51,11 @@ AI_use_organize/               경진대회 제출용 AI 활용 기록 (건드�
 - 이 저장소가 공개 상태일 수 있으니 서버 IP, 도메인, 키를 코드·문서에 쓰지 않는다.
 
 ## 현재 상태와 다음 할 일
-- 완료: 서버·DB·R2 백업·CI/CD, Spring 골격(health 테스트 통과), PR #1(ml-service 음식 인식 mock) 머지.
-- 진행: **상세 작업 순서는 `docs/backend-plan.md`** (Phase A 정리 PR들 → Phase B 백엔드 기능). 범위는 백엔드 우선: A1(저장소 위생)만 하고 바로 B1(인증)부터. ml-service 수정은 팀원 몫, jaehyun/ 삭제는 팀원 허락 후 별도 지시, PR #2(design)는 무시.
-- 다음: Sign in with Apple + JWT, 사진 업로드(R2 presigned URL), job 워커, 혈당 이미지 업로드와 파서 연동, food_catalog, 일일 리포트.
+- 완료: 서버·DB·R2 백업·CI/CD, Spring 골격(health 테스트 통과), PR #1(ml-service 음식 인식 mock) 머지, PR #3(A1 저장소 위생) 머지, PR #4(B1 Sign in with Apple + JWT 발급/회전, `/v1/auth/apple`·`/v1/auth/refresh`·`DELETE /v1/me`) 머지, `docs/backend-api.md`(iOS↔백엔드 API 규약) 추가. PR #2(design)는 닫힘.
+- 진행: **상세 작업 순서는 `docs/backend-plan.md`** (Phase B 백엔드 기능, B1까지 완료). 다음은 B2(사진 업로드).
+- 다음: B2 사진 업로드(R2 presigned URL) → B3 job 워커 + ml-service 연동 → B4 기록 CRUD → B5 혈당 그래프 → B6 에피소드 분석 → B7 리포트.
 - 비용: AWS 크레딧(Free Tier)으로 Lightsail $12/월 차감 예정. 크레딧 소진 시점 확인 필요.
+- 미결정: 저장소 공개 여부(경진대회 요건 확인 후 private 전환 검토 — 지금은 public 유지), 그래프 파서 담당 범위/진행 상황(B5 일정 좌우), 그래프 재업로드 정책(덮어쓰기 vs 버전).
 
 ## 작업 방식 선호
 - 결론부터, 간결하게. 한국어. 확신이 없는 사실(버전, 모델명 등)은 확인된 것처럼 쓰지 않는다.
