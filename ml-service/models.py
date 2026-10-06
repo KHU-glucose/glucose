@@ -1,0 +1,78 @@
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict
+
+
+class PackagedProduct(BaseModel):
+    brand: str | None
+    product_name: str | None
+    volume_ml: int | None
+
+
+class FoodItem(BaseModel):
+    name: str
+    count: int | None
+    unit: Literal["개", "조각", "팩", "컵", "그릇", "공기", "병", "잔"]
+    category_hint: Literal[
+        "MEAL",
+        "SNACK",
+        "FAST_SUGAR",
+        "DRINK",
+        "ALCOHOL",
+    ]
+    tags: list[Literal["HIGH_FAT", "HIGH_CARB", "FAST_SUGAR"]]
+    packaged_product: PackagedProduct | None
+    confidence: Literal["high", "medium", "low"]
+
+
+class FoodRecognitionPayload(BaseModel):
+    is_food_photo: bool
+    items: list[FoodItem]
+    likely_consumed_all: bool | None
+
+
+class FoodRecognitionMeta(BaseModel):
+    model: str
+    latency_ms: int
+    input_tokens: int
+    output_tokens: int
+
+
+class FoodRecognitionResponse(FoodRecognitionPayload):
+    request_id: str
+    meta: FoodRecognitionMeta
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "request_id": "test-request-001",
+                    "is_food_photo": True,
+                    "items": [
+                        {
+                            "name": "초콜릿",
+                            "count": 3,
+                            "unit": "조각",
+                            "category_hint": "FAST_SUGAR",
+                            "tags": ["HIGH_FAT", "FAST_SUGAR"],
+                            "packaged_product": None,
+                            "confidence": "high",
+                        }
+                    ],
+                    "likely_consumed_all": True,
+                    "meta": {
+                        "model": "gpt-6-luna",
+                        "latency_ms": 1840,
+                        "input_tokens": 1120,
+                        "output_tokens": 160,
+                    },
+                }
+            ]
+        }
+    )
+
+
+class ErrorResponse(BaseModel):
+    code: str
+    message: str
+    request_id: str
