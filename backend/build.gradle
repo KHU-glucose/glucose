@@ -32,6 +32,9 @@ dependencies {
 
     implementation 'com.nimbusds:nimbus-jose-jwt:10.10'
 
+    implementation 'software.amazon.awssdk:s3:2.46.7'
+    implementation 'software.amazon.awssdk:url-connection-client:2.46.7'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.springframework.boot:spring-boot-testcontainers'
