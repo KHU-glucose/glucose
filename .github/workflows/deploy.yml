@@ -26,6 +26,15 @@ jobs:
       - name: Backend tests
         working-directory: backend
         run: ./gradlew test --no-daemon
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: ml-service/requirements-dev.txt
+      - name: ML service tests
+        run: |
+          python -m pip install -r ml-service/requirements-dev.txt
+          python -m pytest ml-service/tests
 
   build:
     needs: test
@@ -59,7 +68,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ml-service
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           push: true
           labels: org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
           tags: |
