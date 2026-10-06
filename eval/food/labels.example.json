@@ -1,0 +1,24 @@
+[
+  {
+    "file": "chocolate.jpg",
+    "is_food_photo": true,
+    "context": "HYPO_TREATMENT",
+    "items": [
+      {"name": "초콜릿", "count": 3, "unit": "조각", "category_hint": "FAST_SUGAR"}
+    ],
+    "source": "직접 촬영",
+    "license": "본인 촬영 사진"
+  },
+  {
+    "file": "rice.jpg",
+    "is_food_photo": true,
+    "items": [
+      {"name": "흰쌀밥", "aliases": ["쌀밥", "밥"], "count": 1, "unit": "공기", "category_hint": "MEAL"}
+    ]
+  },
+  {
+    "file": "keyboard.jpg",
+    "is_food_photo": false,
+    "items": []
+  }
+]

@@ -58,3 +58,9 @@ python -m pytest ml-service/tests
 현재 테스트는 음식 recognizer의 구조화 출력 연결, API 인증·요청 ID, 날짜 파싱,
 합성 그래프의 96개 리샘플링과 결측 구간 생성을 검증합니다. 실제 OpenAI 호출과
 실제 리브레 이미지 정확도 평가는 별도의 비공개 평가 데이터가 필요합니다.
+
+## 음식 정확도 평가
+
+사람이 작성한 사진별 정답을 넣고 `python ml-service/eval_food.py --limit 10`으로
+음식명·개수·비음식 판별 점수를 측정할 수 있습니다. 사전 검사는 `--check`입니다.
+준비 방법과 지표 정의는 [음식 평가 안내](../eval/food/README.md)를 참고하세요.
