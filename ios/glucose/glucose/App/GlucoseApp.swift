@@ -11,7 +11,7 @@ import SwiftUI
 struct GlucoseApp: App {
     var body: some Scene {
         WindowGroup {
-            RootTabView()
+            RootView()
         }
     }
 }
