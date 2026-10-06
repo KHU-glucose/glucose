@@ -47,7 +47,7 @@ ml:
   internal-token: ${ML_INTERNAL_TOKEN:dev-token}
 
 apple:
-  bundle-id: ${APPLE_BUNDLE_ID:com.example.glucose}
+  client-id: ${APPLE_CLIENT_ID:com.glucose.glucose}
   issuer: https://appleid.apple.com
   keys-url: https://appleid.apple.com/auth/keys
 
@@ -62,5 +62,5 @@ r2:
   endpoint: ${R2_ENDPOINT:http://localhost:9000}
   access-key-id: ${R2_ACCESS_KEY_ID:test}
   secret-access-key: ${R2_SECRET_ACCESS_KEY:test}
-  bucket-photos: ${R2_BUCKET_PHOTOS:glucose-photos}
+  photo-bucket: ${R2_PHOTO_BUCKET:glucose-photos}
   presign-ttl-seconds: 600    # 10분

@@ -35,7 +35,12 @@ class JwtServiceTest {
     @Test
     void 변조된_토큰은_거부한다() {
         String token = jwtService.issueAccessToken(UUID.randomUUID());
-        String tampered = token.substring(0, token.length() - 1) + (token.endsWith("a") ? "b" : "a");
+        // 맨 끝 글자는 base64url 패딩 비트라 바꿔도 디코딩된 바이트가 그대로일 수 있다(flaky).
+        // 끝에서 두 번째처럼 완전히 유효한 6비트 위치를 바꿔야 항상 바이트가 달라진다.
+        int pos = token.length() - 2;
+        char original = token.charAt(pos);
+        char replacement = original == 'a' ? 'b' : 'a';
+        String tampered = token.substring(0, pos) + replacement + token.substring(pos + 1);
 
         assertThatThrownBy(() -> jwtService.parseAccessToken(tampered))
                 .isInstanceOf(ApiException.class);

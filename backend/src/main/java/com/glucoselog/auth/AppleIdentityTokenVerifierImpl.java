@@ -54,7 +54,7 @@ public class AppleIdentityTokenVerifierImpl implements AppleIdentityTokenVerifie
             if (!properties.issuer().equals(claims.getIssuer())) {
                 throw invalid("발급자가 올바르지 않습니다");
             }
-            if (claims.getAudience() == null || !claims.getAudience().contains(properties.bundleId())) {
+            if (claims.getAudience() == null || !claims.getAudience().contains(properties.clientId())) {
                 throw invalid("대상(aud)이 올바르지 않습니다");
             }
             if (claims.getExpirationTime() == null || claims.getExpirationTime().before(new Date())) {

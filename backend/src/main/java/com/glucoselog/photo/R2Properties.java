@@ -7,6 +7,6 @@ public record R2Properties(
         String endpoint,
         String accessKeyId,
         String secretAccessKey,
-        String bucketPhotos,
+        String photoBucket,
         long presignTtlSeconds) {
 }
