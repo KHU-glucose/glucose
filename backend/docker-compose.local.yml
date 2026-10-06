@@ -1,4 +1,4 @@
-# 로컬 개발용 DB와 ml-service. Spring 앱은 IntelliJ/터미널에서 직접 실행한다.
+# 로컬 개발용 DB/스토리지/ml-service. Spring 앱은 IntelliJ/터미널에서 직접 실행 (./gradlew bootRun)
 # 사용: docker compose -f docker-compose.local.yml up -d
 services:
   postgres:
@@ -11,6 +11,7 @@ services:
       - "127.0.0.1:5432:5432"     # 내 컴퓨터에서만 접속
     volumes:
       - pg_local:/var/lib/postgresql/data
+
   ml-service:
     build:
       context: ../ml-service
@@ -20,5 +21,16 @@ services:
       INTERNAL_TOKEN: ${ML_INTERNAL_TOKEN:-dev-token}
     ports:
       - "127.0.0.1:8000:8000"
+
+  # R2(S3 호환)를 로컬에서 흉내낸다. application.yml의 r2.* 기본값과 짝을 맞춤.
+  # MinIO 대신 adobe/s3mock을 쓴다 (minio/minio, bitnami/minio 모두 Docker Hub에서 더 이상 공개 pull이 안 됨).
+  # 자격증명은 검증하지 않으므로 아무 값이나 돼서 application.yml 기본값(test/test)과 맞춰 둔다.
+  s3mock:
+    image: adobe/s3mock:latest
+    environment:
+      COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS: glucose-photos
+    ports:
+      - "127.0.0.1:9000:9090"     # S3 API (http)
+
 volumes:
   pg_local:

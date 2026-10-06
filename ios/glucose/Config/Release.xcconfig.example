@@ -1,0 +1,8 @@
+// 이 파일을 복사해서 Release.xcconfig를 만든다 (Release.xcconfig는 커밋되지 않음).
+// $ cp Config/Release.xcconfig.example Config/Release.xcconfig
+//
+// 운영 서버 도메인이 아직 정해지지 않았거나, 저장소가 public이라 코드/문서에 쓸 수 없는 값은
+// 여기(gitignore된 실제 파일)에만 채운다. CLAUDE.md "보안·개인정보" 참고.
+
+API_BASE_URL = https://REPLACE_WITH_PRODUCTION_DOMAIN
+INFOPLIST_KEY_API_BASE_URL = $(API_BASE_URL)

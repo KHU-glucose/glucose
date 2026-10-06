@@ -20,6 +20,7 @@ spring:
     enabled: true
   jackson:
     time-zone: Asia/Seoul
+    property-naming-strategy: SNAKE_CASE   # 응답/요청 필드는 snake_case
 
 server:
   port: 8080
@@ -44,3 +45,29 @@ logging:
 ml:
   service-url: ${ML_SERVICE_URL:http://localhost:8000}
   internal-token: ${ML_INTERNAL_TOKEN:dev-token}
+  connect-timeout-ms: 2000
+  read-timeout-ms: 10000     # food/recognize 계약상 제한 시간(10초) 기준
+
+job:
+  poll-interval-ms: 5000
+  batch-size: 5
+  retry-backoff-seconds: 10   # 재시도 간격 = 10s * 시도 횟수(단순 선형 백오프)
+
+apple:
+  client-id: ${APPLE_CLIENT_ID:com.glucose.glucose}
+  issuer: https://appleid.apple.com
+  keys-url: https://appleid.apple.com/auth/keys
+
+jwt:
+  # 운영에서는 반드시 JWT_SECRET 환경변수로 덮어쓴다 (32바이트 이상 무작위 값)
+  secret: ${JWT_SECRET:dev-only-insecure-secret-change-me-32bytes+}
+  access-token-ttl-seconds: 900     # 15분
+  refresh-token-ttl-days: 30
+
+r2:
+  # 로컬 기본값은 docker-compose.local.yml의 s3mock(S3 호환, 자격증명 검증 안 함). 운영에서는 R2_* 환경변수로 덮어쓴다
+  endpoint: ${R2_ENDPOINT:http://localhost:9000}
+  access-key-id: ${R2_ACCESS_KEY_ID:test}
+  secret-access-key: ${R2_SECRET_ACCESS_KEY:test}
+  photo-bucket: ${R2_PHOTO_BUCKET:glucose-photos}
+  presign-ttl-seconds: 600    # 10분
