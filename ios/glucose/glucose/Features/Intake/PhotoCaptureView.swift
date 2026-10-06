@@ -11,6 +11,7 @@ struct PhotoCaptureView: View {
     @State private var uploadViewModel = PhotoUploadViewModel()
     @State private var showCamera = false
     @State private var photosPickerItem: PhotosPickerItem?
+    @State private var showRecognitionResult = false
     @Environment(\.dismiss) private var dismiss
 
     private var isCameraAvailable: Bool {
@@ -89,6 +90,18 @@ struct PhotoCaptureView: View {
             .onChange(of: photosPickerItem) { _, newItem in
                 Task { await loadPickedImage(newItem) }
             }
+            .onChange(of: uploadViewModel.state) { _, newState in
+                if newState == .done {
+                    showRecognitionResult = true
+                }
+            }
+            .navigationDestination(isPresented: $showRecognitionResult) {
+                if let photoId = uploadViewModel.photoId {
+                    RecognitionResultView(photoId: photoId, context: viewModel.context) {
+                        dismiss()
+                    }
+                }
+            }
             .interactiveDismissDisabled(isUploadInFlight)
         }
     }
@@ -122,13 +135,8 @@ struct PhotoCaptureView: View {
         case .completing:
             Label("마무리하는 중...", systemImage: "checkmark.icloud")
         case .done:
-            Label("업로드 완료", systemImage: "checkmark.circle.fill")
+            Label("업로드 완료 · 인식 결과로 이동", systemImage: "checkmark.circle.fill")
                 .foregroundStyle(.green)
-                .onAppear {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                        dismiss()
-                    }
-                }
         }
     }
 
