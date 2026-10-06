@@ -8,6 +8,7 @@ import SwiftUI
 
 struct PhotoCaptureView: View {
     @State private var viewModel = PhotoCaptureViewModel()
+    @State private var uploadViewModel = PhotoUploadViewModel()
     @State private var showCamera = false
     @State private var photosPickerItem: PhotosPickerItem?
     @Environment(\.dismiss) private var dismiss
@@ -64,6 +65,12 @@ struct PhotoCaptureView: View {
                             .font(.footnote)
                     }
                 }
+
+                if viewModel.isReadyForUpload {
+                    Section {
+                        uploadSection
+                    }
+                }
             }
             .navigationTitle("사진 기록")
             .navigationBarTitleDisplayMode(.inline)
@@ -82,7 +89,60 @@ struct PhotoCaptureView: View {
             .onChange(of: photosPickerItem) { _, newItem in
                 Task { await viewModel.loadFromPicker(newItem) }
             }
+            .interactiveDismissDisabled(isUploadInFlight)
         }
+    }
+
+    private var isUploadInFlight: Bool {
+        switch uploadViewModel.state {
+        case .starting, .uploading, .completing: true
+        default: false
+        }
+    }
+
+    @ViewBuilder
+    private var uploadSection: some View {
+        switch uploadViewModel.state {
+        case .idle, .failed:
+            if case .failed(let message) = uploadViewModel.state {
+                Text(message).font(.footnote).foregroundStyle(.red)
+            }
+            Button {
+                startUpload()
+            } label: {
+                Label(uploadRetryLabel, systemImage: "icloud.and.arrow.up")
+            }
+        case .starting:
+            Label("업로드 준비 중...", systemImage: "icloud.and.arrow.up")
+        case .uploading(let progress):
+            VStack(alignment: .leading, spacing: 6) {
+                Label("업로드 중...", systemImage: "icloud.and.arrow.up")
+                ProgressView(value: progress)
+            }
+        case .completing:
+            Label("마무리하는 중...", systemImage: "checkmark.icloud")
+        case .done:
+            Label("업로드 완료", systemImage: "checkmark.circle.fill")
+                .foregroundStyle(.green)
+                .onAppear {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                        dismiss()
+                    }
+                }
+        }
+    }
+
+    private var uploadRetryLabel: String {
+        if case .failed = uploadViewModel.state {
+            return "다시 시도"
+        }
+        return "업로드"
+    }
+
+    private func startUpload() {
+        guard let data = viewModel.processedData else { return }
+        let context = viewModel.context
+        Task { await uploadViewModel.upload(imageData: data, context: context) }
     }
 }
 
