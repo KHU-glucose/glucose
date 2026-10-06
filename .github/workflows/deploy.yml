@@ -4,6 +4,11 @@ name: deploy
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - 'design/**'
+      - 'AI_use_organize/**'
+      - '**.md'
   workflow_dispatch:
 
 permissions:
