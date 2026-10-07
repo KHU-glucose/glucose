@@ -7,6 +7,7 @@ import SwiftUI
 
 struct HomeView: View {
     @State private var showPhotoCapture = false
+    @State private var showInsulinForm = false
 
     var body: some View {
         NavigationStack {
@@ -24,11 +25,25 @@ struct HomeView: View {
                 .buttonStyle(.borderedProminent)
                 .padding(.horizontal)
 
+                Button {
+                    showInsulinForm = true
+                } label: {
+                    Label("인슐린 기록하기", systemImage: "syringe.fill")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                }
+                .buttonStyle(.bordered)
+                .padding(.horizontal)
+
                 Spacer()
             }
             .navigationTitle("홈")
             .sheet(isPresented: $showPhotoCapture) {
                 PhotoCaptureView()
+            }
+            .sheet(isPresented: $showInsulinForm) {
+                InsulinRecordFormView(onSaved: {})
             }
         }
     }
