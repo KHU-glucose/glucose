@@ -14,6 +14,9 @@ public interface InsulinEventRepository extends JpaRepository<InsulinEvent, UUID
 
     Optional<InsulinEvent> findByIdAndUserId(UUID id, UUID userId);
 
+    List<InsulinEvent> findByUserIdAndOccurredAtGreaterThanEqualAndOccurredAtLessThan(
+            UUID userId, Instant from, Instant to);
+
     List<InsulinEvent> findByUserIdOrderByOccurredAtDescIdDesc(UUID userId, Pageable pageable);
 
     @Query("SELECT e FROM InsulinEvent e WHERE e.userId = :userId "

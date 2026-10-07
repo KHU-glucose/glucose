@@ -284,9 +284,60 @@ R2에 실제로 올라왔는지 확인한 뒤 그래프 분석을 백그라운�
 ```
 `value`가 `null`인 구간은 **보간하지 않은 결측**이다. 해당 날짜에 분석 완료된 그래프가 없으면 404 `GLUCOSE_DAY_NOT_FOUND`.
 
-## 15. 앞으로 추가될 것 (문서 자리만 미리 잡아둠)
+## 15. 에피소드/반동 판정 (B6)
 
-- 에피소드/반동 판정 (B6) — 구현 완료했지만 그 자체로는 API가 없다. `EpisodeAnalyzer`(순수 함수)만 있고,
-  일일·주간 리포트(B7)가 실제로 조회할 때 intake/glucose_reading을 가져와서 이 함수에 넘기는 방식.
-  파라미터(묶는 간격, 분석 창 길이, 저혈당 임계값)는 `application.yml`의 `episode.*`.
-- 일일·주간 리포트 (B7)
+API는 없다. `EpisodeAnalyzer`(순수 함수)만 있고, 리포트(B7)가 실제로 조회할 때 intake/glucose_reading을
+가져와서 이 함수에 넘기는 방식. 파라미터(묶는 간격, 분석 창 길이, 저혈당 임계값)는 `application.yml`의 `episode.*`.
+결과는 저장하지 않고 매번 다시 계산한다 — 사진/그래프가 나중에 추가로 올라와도 오래된 값이 남지 않는다.
+
+## 16. 리포트 (B7)
+
+숫자는 전부 코드가 계산한다. **문장(AI 요약)은 아직 없다** — ml-service 계약에 리포트 문장 생성
+엔드포인트가 없어서, 지금은 숫자/건수만 반환한다(Dave 확인). `education_card`는 조건에 따라 붙는
+고정 텍스트고 AI가 생성하지 않는다.
+
+### `GET /v1/reports/daily/{date}` — 일일 리포트
+`date`는 `YYYY-MM-DD`(한국 시간 기준 하루). 응답 200:
+```json
+{
+  "date": "2026-10-01",
+  "glucose": { "coverage_ratio": 0.94, "average": 142.3, "min": 68, "max": 210, "readings_count": 90 },
+  "episodes": [
+    {
+      "start_at": "2026-10-01T09:00:00Z",
+      "original_context": "SNACK",
+      "effective_context": "HYPO_TREATMENT",
+      "auto_reclassified": true,
+      "window_end_at": "2026-10-01T11:00:00Z",
+      "rebound_detected": true,
+      "intake_count": 1
+    }
+  ],
+  "insulin_events_count": 1,
+  "education_cards": [ { "trigger": "REBOUND", "title": "...", "body": "..." } ]
+}
+```
+- `glucose`가 `null`이면 그날 분석 완료된 그래프가 없다 — **판단 불가**.
+- 에피소드의 `auto_reclassified`/`rebound_detected`가 `null`이면 "확인해봤더니 아니다"가 아니라
+  **그 시점에 쓸 글루코스 데이터가 없어서 판단 자체를 못 했다**는 뜻이다(`false`와 다르다).
+
+### `GET /v1/reports/weekly/{date}` — 주간 리포트
+`date`는 그 주(월~일, ISO 기준) 안의 임의의 날. 응답 200:
+```json
+{
+  "week_start": "2026-09-28",
+  "week_end": "2026-10-04",
+  "days_with_data": 5,
+  "days_insufficient": 2,
+  "average_glucose": 138.2,
+  "episodes_count": 12,
+  "rebound_count": 2,
+  "insulin_events_count": 10
+}
+```
+같은 데이터로 다시 호출하면 항상 같은 숫자가 나온다(캐시하지 않고 매번 다시 계산).
+
+## 17. 앞으로 추가될 것 (문서 자리만 미리 잡아둠)
+
+- 리포트 문장(AI 요약) — ml-service 계약에 추가 협의 필요
+- B8(레이트 리밋, OpenAPI, 로그 점검, 백업 복구 테스트)
