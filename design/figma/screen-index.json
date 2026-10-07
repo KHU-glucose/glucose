@@ -1,0 +1,407 @@
+{
+  "updatedAt": "2026-10-07",
+  "source": "Figma live file",
+  "fileKey": "NwWXuSOlgRyfongR48IfhG",
+  "scope": "UI design",
+  "pages": [
+    {
+      "pageId": "11:193",
+      "pageName": "01 · 핵심 흐름",
+      "screens": [
+        {
+          "id": "62:455",
+          "label": "홈 · 대표 디자인",
+          "section": "01 · 음식 기록",
+          "name": "home",
+          "width": 390,
+          "height": 1108,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=62-455"
+        },
+        {
+          "id": "89:549",
+          "label": "음식 촬영",
+          "section": "01 · 음식 기록",
+          "name": "camera",
+          "width": 390,
+          "height": 844,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=89-549"
+        },
+        {
+          "id": "64:668",
+          "label": "음식 확인",
+          "section": "01 · 음식 기록",
+          "name": "food",
+          "width": 390,
+          "height": 1055,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=64-668"
+        },
+        {
+          "id": "89:580",
+          "label": "식사 기록 상세",
+          "section": "01 · 음식 기록",
+          "name": "detail",
+          "width": 390,
+          "height": 844,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=89-580"
+        },
+        {
+          "id": "64:744",
+          "label": "인슐린 기록",
+          "section": "02 · 투여와 혈당 공유",
+          "name": "insulin",
+          "width": 390,
+          "height": 1058,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=64-744"
+        },
+        {
+          "id": "89:643",
+          "label": "하루 마무리",
+          "section": "02 · 투여와 혈당 공유",
+          "name": "wrapup",
+          "width": 390,
+          "height": 1138,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=89-643"
+        },
+        {
+          "id": "87:301",
+          "label": "혈당 가져오기",
+          "section": "02 · 투여와 혈당 공유",
+          "name": "import",
+          "width": 389.9584045410156,
+          "height": 844,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=87-301"
+        },
+        {
+          "id": "87:520",
+          "label": "공유 완료",
+          "section": "02 · 투여와 혈당 공유",
+          "name": "share-received",
+          "width": 389.9584045410156,
+          "height": 844,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=87-520"
+        },
+        {
+          "id": "87:342",
+          "label": "1 · 메뉴 열기",
+          "section": "03 · 리브레 공유 안내",
+          "name": "guide-1",
+          "width": 389.9584045410156,
+          "height": 914,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=87-342"
+        },
+        {
+          "id": "87:400",
+          "label": "2 · 보고서와 기간",
+          "section": "03 · 리브레 공유 안내",
+          "name": "guide-2",
+          "width": 389.9584045410156,
+          "height": 976,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=87-400"
+        },
+        {
+          "id": "87:460",
+          "label": "3 · Glubee로 공유",
+          "section": "03 · 리브레 공유 안내",
+          "name": "guide-3",
+          "width": 390.1328125,
+          "height": 952,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=87-460"
+        },
+        {
+          "id": "65:1885",
+          "label": "일간 리포트",
+          "section": "04 · 리포트와 대응 리뷰",
+          "name": "daily",
+          "width": 390,
+          "height": 2104.541015625,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=65-1885"
+        },
+        {
+          "id": "65:1674",
+          "label": "주간 리포트",
+          "section": "04 · 리포트와 대응 리뷰",
+          "name": "weekly",
+          "width": 390,
+          "height": 3235.5087890625,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=65-1674"
+        },
+        {
+          "id": "64:1117",
+          "label": "저혈당 대응 리뷰",
+          "section": "04 · 리포트와 대응 리뷰",
+          "name": "review-low",
+          "width": 390,
+          "height": 2153.978271484375,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=64-1117"
+        },
+        {
+          "id": "64:1231",
+          "label": "고혈당 대응 리뷰",
+          "section": "04 · 리포트와 대응 리뷰",
+          "name": "review-high",
+          "width": 390,
+          "height": 2025.978271484375,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=64-1231"
+        },
+        {
+          "id": "89:724",
+          "label": "대응 기록 상세",
+          "section": "05 · 기록 연결과 다음 행동",
+          "name": "response-detail",
+          "width": 390,
+          "height": 1118,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=89-724"
+        },
+        {
+          "id": "89:788",
+          "label": "식사·인슐린 시간",
+          "section": "05 · 기록 연결과 다음 행동",
+          "name": "timing",
+          "width": 390,
+          "height": 844,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=89-788"
+        },
+        {
+          "id": "89:832",
+          "label": "다음 주 기록 계획",
+          "section": "05 · 기록 연결과 다음 행동",
+          "name": "observation",
+          "width": 390,
+          "height": 844,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=89-832"
+        }
+      ]
+    },
+    {
+      "pageId": "8:1384",
+      "pageName": "02 · 상세·설정·위젯·알림",
+      "screens": [
+        {
+          "id": "90:454",
+          "label": "성별",
+          "section": "01 · 기본 프로필",
+          "name": "setup-sex",
+          "width": 390,
+          "height": 844,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-454"
+        },
+        {
+          "id": "90:492",
+          "label": "나이",
+          "section": "01 · 기본 프로필",
+          "name": "setup-age",
+          "width": 390,
+          "height": 844,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-492"
+        },
+        {
+          "id": "90:517",
+          "label": "키",
+          "section": "01 · 기본 프로필",
+          "name": "setup-height",
+          "width": 390,
+          "height": 844,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-517"
+        },
+        {
+          "id": "90:542",
+          "label": "체중",
+          "section": "01 · 기본 프로필",
+          "name": "setup-weight",
+          "width": 390,
+          "height": 844,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-542"
+        },
+        {
+          "id": "90:567",
+          "label": "당뇨병과 질환",
+          "section": "02 · 건강 프로필과 확인",
+          "name": "setup-condition",
+          "width": 390,
+          "height": 1206,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-567"
+        },
+        {
+          "id": "90:647",
+          "label": "인슐린 등록",
+          "section": "02 · 건강 프로필과 확인",
+          "name": "setup-insulin",
+          "width": 390,
+          "height": 1098,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-647"
+        },
+        {
+          "id": "90:698",
+          "label": "프로필 확인",
+          "section": "02 · 건강 프로필과 확인",
+          "name": "setup-summary",
+          "width": 390,
+          "height": 1183,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-698"
+        },
+        {
+          "id": "90:761",
+          "label": "첫 14일 돌아보기",
+          "section": "02 · 건강 프로필과 확인",
+          "name": "baseline",
+          "width": 390,
+          "height": 1032,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-761"
+        },
+        {
+          "id": "90:816",
+          "label": "설정",
+          "section": "03 · 설정과 보관",
+          "name": "settings",
+          "width": 390,
+          "height": 1530,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-816"
+        },
+        {
+          "id": "90:912",
+          "label": "평소 인슐린",
+          "section": "03 · 설정과 보관",
+          "name": "usual-insulin",
+          "width": 390,
+          "height": 915,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-912"
+        },
+        {
+          "id": "90:969",
+          "label": "데이터 보관",
+          "section": "03 · 설정과 보관",
+          "name": "data-info",
+          "width": 390,
+          "height": 844,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-969"
+        },
+        {
+          "id": "90:1005",
+          "label": "인슐린 미등록",
+          "section": "03 · 설정과 보관",
+          "name": "insulin-empty",
+          "width": 390,
+          "height": 844,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-1005"
+        },
+        {
+          "id": "90:1043",
+          "label": "기록 없는 홈",
+          "section": "04 · 기록 시작과 검색",
+          "name": "home-empty",
+          "width": 390,
+          "height": 981,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-1043"
+        },
+        {
+          "id": "90:1111",
+          "label": "사진 선택",
+          "section": "04 · 기록 시작과 검색",
+          "name": "album",
+          "width": 390,
+          "height": 844,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-1111"
+        },
+        {
+          "id": "90:1149",
+          "label": "음식 검색",
+          "section": "04 · 기록 시작과 검색",
+          "name": "search",
+          "width": 390,
+          "height": 894,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-1149"
+        },
+        {
+          "id": "90:1228",
+          "label": "검색 결과 없음",
+          "section": "04 · 기록 시작과 검색",
+          "name": "search-empty",
+          "width": 390,
+          "height": 844,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-1228"
+        },
+        {
+          "id": "90:1281",
+          "label": "음식 추가 방식",
+          "section": "05 · 음식과 기록 관리",
+          "name": "add-source",
+          "width": 390,
+          "height": 844,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-1281"
+        },
+        {
+          "id": "90:1322",
+          "label": "음식 직접 등록",
+          "section": "05 · 음식과 기록 관리",
+          "name": "custom-food",
+          "width": 390,
+          "height": 844,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-1322"
+        },
+        {
+          "id": "90:1390",
+          "label": "인슐린 기록 상세",
+          "section": "05 · 음식과 기록 관리",
+          "name": "insulin-detail",
+          "width": 390,
+          "height": 844,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-1390"
+        },
+        {
+          "id": "90:1448",
+          "label": "기록 삭제",
+          "section": "05 · 음식과 기록 관리",
+          "name": "delete",
+          "width": 390,
+          "height": 844,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-1448"
+        },
+        {
+          "id": "90:1469",
+          "label": "잠금화면 위젯",
+          "section": "06 · 위젯과 알림",
+          "name": "widget",
+          "width": 390,
+          "height": 496,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-1469"
+        },
+        {
+          "id": "90:1493",
+          "label": "시스템 알림",
+          "section": "06 · 위젯과 알림",
+          "name": "system-notifications",
+          "width": 390,
+          "height": 702,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-1493"
+        },
+        {
+          "id": "90:1525",
+          "label": "앱 알림",
+          "section": "06 · 위젯과 알림",
+          "name": "notifications",
+          "width": 390,
+          "height": 844,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-1525"
+        },
+        {
+          "id": "90:1559",
+          "label": "기록 벌집",
+          "section": "07 · 기록 습관 (제안)",
+          "name": "habit",
+          "width": 390,
+          "height": 1491,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-1559"
+        },
+        {
+          "id": "90:1735",
+          "label": "주간 랭킹",
+          "section": "07 · 기록 습관 (제안)",
+          "name": "ranking",
+          "width": 390,
+          "height": 1339,
+          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-1735"
+        }
+      ]
+    }
+  ]
+}

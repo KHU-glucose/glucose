@@ -1,24 +1,26 @@
 # 디자인 자료
 
-기존 폴더의 결과물 24개를 원래 파일명과 내용 그대로 분류했습니다. 번호가 붙은 파일도 디자인 변경 이력을 보존하기 위해 모두 포함했습니다.
+최신 UI 기준은 **[Figma 핵심 흐름](https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=11-193)**입니다. 승인된 홈과 레퍼런스를 바탕으로 전체 43개 화면을 정리했습니다.
 
-## 대표 파일
+## 먼저 볼 자료
 
-- [최근 번호의 디자인 프로토타입](prototypes/glucose-design%20%289%29.html)
-- [홈 화면 시안 3종](prototypes/glucose-home-3-designs%20%282%29.html)
-- [꿀벌 캐릭터 콘셉트 시트](assets/글루비%20꿀벌%20캐릭터%20콘셉트%20시트-1.png)
-- [벌집 성장 이야기](assets/글루비의%20벌집%20성장%20이야기-2.png)
-- [모바일 UI 플로우 콜라주](assets/네%20개%20모바일%20UI%20플로우%20콜라주.png)
-- [게이미피케이션 기획](docs/Glubee_Gamification_Plan.docx)
+1. [팀원 사용 안내](figma/팀원-사용안내.md): 페이지 위치와 자료의 용도.
+2. [공통 디자인 기준](figma/공통-디자인-기준.md): 색상·정보 위계·그래프 규칙.
+3. [화면 목록](figma/screen-index.json): 실제 Figma에서 확인한 화면 링크·크기.
+4. [수정 내역](figma/수정내역-2026-10-07.md): 변경 위치와 문구 변경.
+5. [파일 정리 내역](figma/파일정리-2026-10-07.md): 삭제·보관 기준.
 
-HTML 파일은 내려받은 뒤 브라우저로 열어 볼 수 있습니다. 대표 디자인은 파일 번호와 수정 시각을 기준으로 선택했으며, 최종 승인본 여부는 별도로 확인해야 합니다.
+## 보관 자료
 
-## 보존 및 검증
+- `prototypes/glucose-design (9).html`: 초기 프로토타입. 최신 UI로 사용하지 않습니다.
+- `prototypes/2.png`–`5.png`: 사용자가 추가한 흐름 참고 이미지.
+- `assets/*-six-situations-flat-v2.png`: 글루비·글루베어·글루코알라·글루콘의 2D 상황별 원화.
+- `assets/*-app-touchpoints-v2.png`: 캐릭터별 앱 사용 장면 콘셉트. 현재 UI 사양과는 구분합니다.
+- `assets/glubee-icons-flat-v2.png`: 아이콘 콘셉트 시트.
+- `assets/글루비 꿀벌 캐릭터 콘셉트 시트-1.png`: 기존 꿀벌 원본 자료.
+- `assets/mascot-flat-v2-prompts.md`, `mascot-touchpoints-v2-prompts.md`: 최신 캐릭터 제작 기록.
+- `docs/`: 현재 남아 있는 기획·API 문서. 기존 사용자 삭제는 유지했습니다.
 
-`manifest.json`에는 각 원본의 이름, 정리한 경로, 파일 크기, SHA-256 해시가 기록되어 있습니다.
+마스코트는 최종 확정 전이며 UI 검토를 우선합니다. 실제 리브레 앱 캡처가 없는 안내 부분은 자료 확보 후 교체합니다.
 
-다음 파일들은 SHA-256이 같아 내용이 동일합니다. 원본 보존을 위해 삭제하지 않았습니다.
-
-- `glucose-design (7).html`, `glucose-design (8).html`, `glucose-design (9).html`
-- `glucose-home-3-designs (1).html`, `glucose-home-3-designs (2).html`
-- `Glubee_Gamification_Plan.docx`, `Glubee_Gamification_Plan (1).docx`, `Glubee_Gamification_Plan (2).docx`
+`manifest.json`에는 보관 중인 디자인 파일의 경로·크기·SHA-256이 기록되어 있습니다. 과거 SVG·ZIP·생성 스크립트는 최신 Figma와 달라 혼동을 줄이기 위해 제거했습니다.

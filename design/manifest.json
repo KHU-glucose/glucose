@@ -1,27 +1,81 @@
 [
   {
-    "originalName": "개발 흐름 총정리.pdf",
-    "path": "design/docs/개발 흐름 총정리.pdf",
-    "bytes": 821337,
-    "sha256": "13d62342fb5bdb203a1602f0bec2a4fe7c55129affb39875e3304d16a728bfbd"
-  },
-  {
     "originalName": "글루비 꿀벌 캐릭터 콘셉트 시트-1.png",
     "path": "design/assets/글루비 꿀벌 캐릭터 콘셉트 시트-1.png",
     "bytes": 1569066,
     "sha256": "af9e5bdfc4154e3b3ffdc87d676057dd2ef0ce9a08cb7f4e277740d7d1becaeb"
   },
   {
-    "originalName": "글루비의 벌집 성장 이야기-2.png",
-    "path": "design/assets/글루비의 벌집 성장 이야기-2.png",
-    "bytes": 2030306,
-    "sha256": "8881d22d61de08cf839a997d025990a50366c3be22d71b2f202086c3c1139644"
+    "originalName": "glubear-app-touchpoints-v2.png",
+    "path": "design/assets/glubear-app-touchpoints-v2.png",
+    "bytes": 1416329,
+    "sha256": "c3a1ac686a8fb71088362693264663fc3f7953d2cad9487ff47e12bb78963f94"
   },
   {
-    "originalName": "네 개 모바일 UI 플로우 콜라주.png",
-    "path": "design/assets/네 개 모바일 UI 플로우 콜라주.png",
-    "bytes": 1521730,
-    "sha256": "02e247ece0a22f2eb11c1529690eff80b5706064dedd0253829f23563698d8a6"
+    "originalName": "glubear-six-situations-flat-v2.png",
+    "path": "design/assets/glubear-six-situations-flat-v2.png",
+    "bytes": 1358334,
+    "sha256": "730182de382d3789cf0676787192c94f9061ac13051c4bbd3698b00bdca30635"
+  },
+  {
+    "originalName": "glubee-app-touchpoints-v2.png",
+    "path": "design/assets/glubee-app-touchpoints-v2.png",
+    "bytes": 1435744,
+    "sha256": "8aef9c58d030fbdf5c0c7057ad9441446ab1493bbc4e433b8525bd6e5cc3dc4e"
+  },
+  {
+    "originalName": "glubee-icons-flat-v2.png",
+    "path": "design/assets/glubee-icons-flat-v2.png",
+    "bytes": 1266889,
+    "sha256": "417ba98b3cec5f0a7344ae90e3cf9f408964ad3a48c6f9438a9cbbb0f660fa78"
+  },
+  {
+    "originalName": "glubee-six-situations-flat-v2.png",
+    "path": "design/assets/glubee-six-situations-flat-v2.png",
+    "bytes": 1389988,
+    "sha256": "0f146f44bb587b44cbd90c61ffda0a3e65fa7547e10c3030255df60f358871e9"
+  },
+  {
+    "originalName": "glucorn-app-touchpoints-v2.png",
+    "path": "design/assets/glucorn-app-touchpoints-v2.png",
+    "bytes": 1384048,
+    "sha256": "a1c80f0f6bfe51052a39f30e1e2fa9a58e0e9054e28de2cc65cf587057514878"
+  },
+  {
+    "originalName": "glucorn-six-situations-flat-v2.png",
+    "path": "design/assets/glucorn-six-situations-flat-v2.png",
+    "bytes": 1387120,
+    "sha256": "3d3aff47781a5112d60330259597bc0d11cb3d221e0dd026e4c595ec4ff6ec64"
+  },
+  {
+    "originalName": "glukoala-app-touchpoints-v2.png",
+    "path": "design/assets/glukoala-app-touchpoints-v2.png",
+    "bytes": 1430282,
+    "sha256": "b257b9803e96482599a0f464d4b6b65d36819226b95e851586ca58d8c3454804"
+  },
+  {
+    "originalName": "glukoala-six-situations-flat-v2.png",
+    "path": "design/assets/glukoala-six-situations-flat-v2.png",
+    "bytes": 1401571,
+    "sha256": "4879ececb5c7be149e3b3068c59ddbf162dfd7908e6f76baddfa07fd3da61327"
+  },
+  {
+    "originalName": "mascot-flat-v2-prompts.md",
+    "path": "design/assets/mascot-flat-v2-prompts.md",
+    "bytes": 12001,
+    "sha256": "fdd04c4ad3e9246104e192d131c78100b67aaf0317bd175f3011603a74e70f0e"
+  },
+  {
+    "originalName": "mascot-touchpoints-v2-prompts.md",
+    "path": "design/assets/mascot-touchpoints-v2-prompts.md",
+    "bytes": 13737,
+    "sha256": "fc041d770ac6b9488f669bf1163a480d76b11d7863a87694227cd2ab9b13b32e"
+  },
+  {
+    "originalName": "개발 흐름 총정리.pdf",
+    "path": "design/docs/개발 흐름 총정리.pdf",
+    "bytes": 821337,
+    "sha256": "13d62342fb5bdb203a1602f0bec2a4fe7c55129affb39875e3304d16a728bfbd"
   },
   {
     "originalName": "서비스_필요성_최종.docx",
@@ -36,76 +90,64 @@
     "sha256": "72e45d59ab5370e01b40913fcf5516082188bc8f9d4805fceb6e80b2022b5888"
   },
   {
-    "originalName": "Glubee_Gamification_Plan (1).docx",
-    "path": "design/docs/Glubee_Gamification_Plan (1).docx",
-    "bytes": 43664,
-    "sha256": "3ea6cdfb4452a4825b81fa28cd43b3ed12debe8b394a15bf85148096da84b5ea"
+    "originalName": "ml-service API 계약서.pdf",
+    "path": "design/docs/ml-service API 계약서.pdf",
+    "bytes": 839004,
+    "sha256": "2ff12374824e67627698ad3021163ea27d18731b8bf22baa193d95ef98ac3d18"
   },
   {
-    "originalName": "Glubee_Gamification_Plan (2).docx",
-    "path": "design/docs/Glubee_Gamification_Plan (2).docx",
-    "bytes": 43664,
-    "sha256": "3ea6cdfb4452a4825b81fa28cd43b3ed12debe8b394a15bf85148096da84b5ea"
+    "originalName": "공통-디자인-기준.md",
+    "path": "design/figma/공통-디자인-기준.md",
+    "bytes": 2824,
+    "sha256": "239968e0e5875e5f344e2ef8723afbe03f5174dbdf8dc1d446c8575ae1f67613"
   },
   {
-    "originalName": "Glubee_Gamification_Plan.docx",
-    "path": "design/docs/Glubee_Gamification_Plan.docx",
-    "bytes": 43664,
-    "sha256": "3ea6cdfb4452a4825b81fa28cd43b3ed12debe8b394a15bf85148096da84b5ea"
+    "originalName": "수정내역-2026-10-07.md",
+    "path": "design/figma/수정내역-2026-10-07.md",
+    "bytes": 17870,
+    "sha256": "96d540bebcfc82dbc3110fe2ad16c36790440df1172fbf84ad0ec50a93fef720"
   },
   {
-    "originalName": "glucose-design (1).html",
-    "path": "design/prototypes/glucose-design (1).html",
-    "bytes": 33732,
-    "sha256": "4eab7aebe804d96c5333ffaa275aeb864cb28544a9162948d20cf1152cc7fd7e"
+    "originalName": "팀원-사용안내.md",
+    "path": "design/figma/팀원-사용안내.md",
+    "bytes": 1758,
+    "sha256": "3707b71158988d518dadf775b885d9fb913b06ff75b0c5fc5760e06de0043ff9"
   },
   {
-    "originalName": "glucose-design (2).html",
-    "path": "design/prototypes/glucose-design (2).html",
-    "bytes": 37481,
-    "sha256": "0c82d2ac8a6b77e521bbeb0c5743af110d653c51a94b8cdc83f5363f8f9c9b55"
+    "originalName": "파일정리-2026-10-07.md",
+    "path": "design/figma/파일정리-2026-10-07.md",
+    "bytes": 1843,
+    "sha256": "4bd5cfee54adc91d6cb2c121bd3442e70a524f66df6ea28f7dbe66f716f82287"
   },
   {
-    "originalName": "glucose-design (3).html",
-    "path": "design/prototypes/glucose-design (3).html",
-    "bytes": 1411913,
-    "sha256": "b3d051fe3668d5f827151e7b55f4952f1a22b830d496fe40877f974e1f4540cb"
+    "originalName": "screen-index.json",
+    "path": "design/figma/screen-index.json",
+    "bytes": 13644,
+    "sha256": "7206a79233b92d123627427358746f7dabc1bfcf17448385fd9413fdafdda197"
   },
   {
-    "originalName": "glucose-design (4).html",
-    "path": "design/prototypes/glucose-design (4).html",
-    "bytes": 1432475,
-    "sha256": "9d150cf62ad563867190e69b1644a80500217af84e4f7b4cf8176112fd8e3ad0"
+    "originalName": "2.png",
+    "path": "design/prototypes/2.png",
+    "bytes": 266567,
+    "sha256": "ac9afc1d07e7e647bad9de82e0c1a92c5b6a1cb182f9dfff12421f6831f57810"
   },
   {
-    "originalName": "glucose-design (5).html",
-    "path": "design/prototypes/glucose-design (5).html",
-    "bytes": 1488055,
-    "sha256": "9b8b2f9b4ecaeddfb2d68efc91e5220af002fd782d483680b27171032d968064"
+    "originalName": "3.png",
+    "path": "design/prototypes/3.png",
+    "bytes": 234079,
+    "sha256": "9ed1e5c7af09203291242cf87ee2471828d2cf66847a93fbe722516042b55957"
   },
   {
-    "originalName": "glucose-design (5).zip",
-    "path": "design/archives/glucose-design (5).zip",
-    "bytes": 985813,
-    "sha256": "c3294a68e6ef3af5a7657b42fb5ea0f633ff5e6119ef6ced840f33bfab43f982"
+    "originalName": "4.png",
+    "path": "design/prototypes/4.png",
+    "bytes": 352320,
+    "sha256": "1cac8cedad2b73b65eadd6140b33f1342ae97be27dab34885c2d80fee6770a06"
   },
   {
-    "originalName": "glucose-design (6).html",
-    "path": "design/prototypes/glucose-design (6).html",
-    "bytes": 568083,
-    "sha256": "588e593df0a5ef734336c4776ac5559cb6b66c82ed45655f7049fa4f8abc74bf"
-  },
-  {
-    "originalName": "glucose-design (7).html",
-    "path": "design/prototypes/glucose-design (7).html",
-    "bytes": 716028,
-    "sha256": "2dcb4c8e65e9fdf419c5ad0a18e0134cbd6c332a0630eaf0bf8f4c84681359b6"
-  },
-  {
-    "originalName": "glucose-design (8).html",
-    "path": "design/prototypes/glucose-design (8).html",
-    "bytes": 716028,
-    "sha256": "2dcb4c8e65e9fdf419c5ad0a18e0134cbd6c332a0630eaf0bf8f4c84681359b6"
+    "originalName": "5.png",
+    "path": "design/prototypes/5.png",
+    "bytes": 118611,
+    "sha256": "9545e011eac4eeb01c37bbfb2bba3c52974e297664380f2d1668ac7eb122fa05"
   },
   {
     "originalName": "glucose-design (9).html",
@@ -114,33 +156,9 @@
     "sha256": "2dcb4c8e65e9fdf419c5ad0a18e0134cbd6c332a0630eaf0bf8f4c84681359b6"
   },
   {
-    "originalName": "glucose-design.html",
-    "path": "design/prototypes/glucose-design.html",
-    "bytes": 21555,
-    "sha256": "9d689333f8c5e1a279c896ed351584c4ebc44cdec70042c68662163f7947796b"
-  },
-  {
-    "originalName": "glucose-home-3-designs (1).html",
-    "path": "design/prototypes/glucose-home-3-designs (1).html",
-    "bytes": 17530,
-    "sha256": "141862007495b12d6a55d8d872ff87e796160b09da1f4a5670b1a31de31e3ca4"
-  },
-  {
-    "originalName": "glucose-home-3-designs (2).html",
-    "path": "design/prototypes/glucose-home-3-designs (2).html",
-    "bytes": 17530,
-    "sha256": "141862007495b12d6a55d8d872ff87e796160b09da1f4a5670b1a31de31e3ca4"
-  },
-  {
-    "originalName": "glucose-home-3-designs.html",
-    "path": "design/prototypes/glucose-home-3-designs.html",
-    "bytes": 17526,
-    "sha256": "de2723e7ce61979685017e91faf5375ab4152b4ca59ca270f4712f31a045d1fd"
-  },
-  {
-    "originalName": "ml-service API 계약서.pdf",
-    "path": "design/docs/ml-service API 계약서.pdf",
-    "bytes": 839004,
-    "sha256": "2ff12374824e67627698ad3021163ea27d18731b8bf22baa193d95ef98ac3d18"
+    "originalName": "README.md",
+    "path": "design/README.md",
+    "bytes": 1906,
+    "sha256": "07b1716accdecf600c839a3220f4c31778c0d99b547f45cc5a501c1e0d7f0790"
   }
 ]
