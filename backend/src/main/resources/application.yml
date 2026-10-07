@@ -71,3 +71,11 @@ r2:
   secret-access-key: ${R2_SECRET_ACCESS_KEY:test}
   photo-bucket: ${R2_PHOTO_BUCKET:glucose-photos}
   presign-ttl-seconds: 600    # 10분
+
+# CLAUDE.md 분석 규칙(에피소드/반동 판정). AI 없는 순수 함수의 파라미터 - 숫자를 코드에 박지 않고 여기서 조정한다
+episode:
+  gap-minutes: 90             # 이 간격 이내의 섭취는 하나의 에피소드로 묶는다 (문서상 60~90분 중 상한값을 기본으로)
+  meal-window-hours: 4        # 식사/간식 분석 창 (문서상 3~5시간 중 중간값)
+  hypo-treatment-window-hours: 2
+  alcohol-window-hours: 12
+  hypo-glucose-threshold: 70  # 에피소드 시작 직전 혈당이 이 값 미만이면 처치로 자동 분류
