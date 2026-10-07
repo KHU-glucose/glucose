@@ -9,6 +9,7 @@ struct InsulinRecordFormView: View {
     @State private var viewModel: InsulinRecordFormViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var showDeleteConfirm = false
+    @State private var showTimeEditor = false
 
     private let onSaved: () -> Void
     private let onDeleted: () -> Void
@@ -30,7 +31,16 @@ struct InsulinRecordFormView: View {
         NavigationStack {
             Form {
                 Section("시각") {
-                    DatePicker("시각", selection: $viewModel.occurredAt)
+                    if viewModel.mode == .create && !showTimeEditor {
+                        HStack {
+                            Text("지금")
+                            Spacer()
+                            Button("시간 변경") { showTimeEditor = true }
+                                .font(.footnote)
+                        }
+                    } else {
+                        DatePicker("시각", selection: $viewModel.occurredAt)
+                    }
                 }
 
                 Section("단위") {
@@ -66,6 +76,9 @@ struct InsulinRecordFormView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("저장") {
+                        if viewModel.mode == .create && !showTimeEditor {
+                            viewModel.occurredAt = .now
+                        }
                         Task {
                             if await viewModel.save() {
                                 onSaved()
