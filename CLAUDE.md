@@ -53,9 +53,9 @@ AI_use_organize/               경진대회 제출용 AI 활용 기록 (건드�
 ## 현재 상태와 다음 할 일
 - 백엔드 완료(머지): A1, B0(`docs/backend-api.md`), B1(Sign in with Apple + JWT), B2(사진 업로드 R2 presigned URL), B3(job 워커 + ml-service 연동, 업로드 완료→음식 인식 job 자동 적재), B4(intake/insulin_event CRUD, `food_catalog` 시드, `GET /v1/photos/{id}/recognition`). ml-service PR(실제 음식 인식 + 그래프 파서)도 머지됨.
 - iOS 완료(머지): I0(뼈대, 탭 4개), I1(기록 목록·상세 + Mock Repository), I2(Sign in with Apple, 실기기 로그인 확인됨).
-- 진행: **상세 작업 순서는 `docs/backend-plan.md`**(백엔드), `ios-plan.md`(iOS, Downloads에 있던 원본). I3(사진 촬영·리사이즈)·I4(R2 업로드)는 PR 올라간 상태(#15, #16, Dave 실기기 검증 대기). I5(인식 결과 확인·수정 화면)는 I4 브랜치 위에서 작업 중 — `feat/ios-recognition-result` 브랜치, I3/I4가 먼저 머지돼야 함.
+- 진행: **상세 작업 순서는 `docs/backend-plan.md`**(백엔드), `ios-plan.md`(iOS, Downloads에 있던 원본). I3·I4·I5·I6·I7이 PR로 쭉 쌓여 있음(#15 I3, #16 I4, #17 I5, I6, I7 — 전부 Dave 실기기 검증 대기, 순서대로 머지 필요: I3→I4→I5→I6→I7). I7에서 기록 목록이 드디어 Mock 없이 실제 서버 데이터로 동작함.
 - Bundle ID는 `com.glubee.glubee`로 확정(앱 실제 이름 Glubee). `com.glucose.glucose`는 쓰지 않음 — 저장소/패키지명(`com.glucoselog`)은 그대로 유지.
-- 다음: 백엔드는 B5(혈당 그래프), iOS는 I5 다음 I6(인슐린 기록 입력) → I7(기록 목록 Live Repository 교체).
+- 다음: 백엔드는 B5(혈당 그래프), iOS는 I7 다음 Phase 4(I8 그래프 업로드 → I9 일일 리포트 → I10 주간 리포트), B5 끝나야 I8이 의미 있음.
 - 비용: AWS 크레딧(Free Tier)으로 Lightsail $12/월 차감 예정. 크레딧 소진 시점 확인 필요.
 - 미결정: 저장소 공개 여부(경진대회 요건 확인 후 private 전환 검토 — 지금은 public 유지), 그래프 파서 담당 범위/진행 상황(B5 일정 좌우), 그래프 재업로드 정책(덮어쓰기 vs 버전).
 

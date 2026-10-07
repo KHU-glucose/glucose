@@ -9,6 +9,10 @@ import SwiftUI
 
 struct RecordDetailView: View {
     let item: RecordItem
+    var onChanged: () async -> Void = {}
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var showEditInsulin = false
 
     var body: some View {
         List {
@@ -38,6 +42,25 @@ struct RecordDetailView: View {
             }
         }
         .navigationTitle(navigationTitle)
+        .toolbar {
+            if case .insulin = item {
+                ToolbarItem(placement: .primaryAction) {
+                    Button("수정") { showEditInsulin = true }
+                }
+            }
+        }
+        .sheet(isPresented: $showEditInsulin) {
+            if case .insulin(let record) = item {
+                InsulinRecordFormView(
+                    mode: .edit(id: record.id),
+                    occurredAt: record.occurredAt,
+                    units: record.units,
+                    kind: record.kind,
+                    onSaved: { Task { await onChanged(); dismiss() } },
+                    onDeleted: { Task { await onChanged(); dismiss() } }
+                )
+            }
+        }
     }
 
     private var navigationTitle: String {
