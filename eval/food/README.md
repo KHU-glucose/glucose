@@ -9,6 +9,7 @@ AI가 생성한 정답 대신, 사진을 확인한 사람이 음식명·개수 �
 - [Food-101 전체 확보와 출처·이용 조건](food101-download.md)
 - [100장 v3 예비평가 준비](v3-primary-benchmark-2026-10-08.md)
 - [100장 v3 예비평가 결과](v3-primary-results-2026-10-08.md): 대표 음식명 일치 71/100.
+- [같은 100장 low/high 비교](image-detail-comparison-2026-10-08.md): 71/100 → 76/100, 시간·토큰도 함께 측정.
 
 `food_testing/` 전체는 Git에서 제외합니다. 사진·실제 라벨·원본 보고서는 로컬/팀 비공개
 공유로 별도 전달해야 하며, 저장소를 복제하는 것만으로 평가 데이터가 생기지 않습니다.
@@ -63,6 +64,17 @@ python ml-service/eval_food.py --limit 10
 백엔드 통합을 검사하는 도구는 아닙니다. 사진을 순차 실행하며 각 결과를 로컬 보고서에
 저장합니다. 기존 보고서를 덮어쓰지 않습니다.
 
+현재 음식 인식은 사용자 요청에 따라 다시 `detail=low`이며 기본 프롬프트는 `cuisine-v7`입니다.
+768px 제한·모델 선택·출력 제한·기존 분류/개수 규칙은 유지하고 표시용 `food_group`만 추가했습니다.
+새 보고서의 `settings.image_detail`에는 `low`가 기록됩니다. 자세한 내용은 아래 대분류 항목을 참고하세요.
+앞선 v3/high 비교 당시에는 프롬프트·모델 선택·768px 제한·출력 제한·API 스키마를 유지했습니다.
+기존 100장 71% 결과는 `low`로 측정한 과거 기준선입니다. 같은 100장으로 high 평가를 완료했고
+대표 이름 일치는 76%, 처리 시간 중앙값 4.4345초, 입력 토큰 153,194였습니다.
+이는 1회 비교에서 관찰한 결과이며 일반적인 개선 입증은 아닙니다. 조건·분모·토큰 범위와
+기존 low 대비 변화는 [비교 결과](image-detail-comparison-2026-10-08.md)를 확인하세요.
+기존 `run_primary_benchmark.py`의 실행 폴더와 원본 기록을 재사용하거나 삭제하지 마세요.
+상세도 선택은 [OpenAI 공식 이미지 입력 지침](https://developers.openai.com/api/docs/guides/images-vision)을 참고했습니다.
+
 ## 점수 읽기
 
 | 지표 | 계산 |
@@ -95,7 +107,8 @@ python ml-service/eval_food.py --limit 10
 선택 문단만 교체했고, `contrast-v5`는 v3의 이름 선택 문단에 시각적 구별 단서만 추가했습니다.
 사진 예시를 학습시킨 것은 아닙니다.
 실제 서비스 기본 버전은 `ACTIVE_PROMPT_VERSION`을 확인하세요.
-추가 반복 평가에서 v4의 향상은 입증되지 않아 현재 기본값은 v3로 유지했습니다.
+추가 반복 평가에서 v4의 향상은 입증되지 않아 당시 기본값은 v3로 유지했습니다.
+이후 사용자 요청으로 대분류만 덧붙인 `cuisine-v7`을 기본값으로 적용했으며 실제 사진 성능은 미측정입니다.
 [추가 실험 증빙](evidence/prompt-refinement-2026-10-07.json)을 함께 확인하세요.
 
 ```powershell
@@ -161,6 +174,18 @@ python ml-service/eval_food.py --prompt-version examples-v3 --limit 100 --split 
 
 ## 혈당 관리 중심 추가 평가 (2026-10-08)
 
+최신 추가 합의는 [음식 계열 우선 → 동일 계열 내 영양 참고값 비교](family-gated-nutrition.md)입니다.
+정답·예측이 고정 명칭 표의 같은 계열일 때만 100g당 탄수화물·당류 차이를 계산합니다.
+자료 없는 항목은 보류하며, 서로 다른 음식의 영양 수치만 비슷하다는 이유로 정답 처리하지 않습니다.
+초기 표는 5개 계열뿐이며 전체 음식 범위를 평가한 것으로 해석하지 마세요.
+기존 raw 보고서는 `ml-service/eval_food_family.py`로 유료 API 호출 없이 별도 진단할 수 있습니다.
+
+사용자 합의에 따라 **음식명 정확도**와 **혈당 관리용 특성 정확도**를 별도 요약한다.
+[두 축의 정의·분모·커버리지](two-axis-accuracy.md)를 먼저 확인하세요.
+보고서 `accuracy_summary.food_name`과 `accuracy_summary.glucose_management`에 각각 저장하고
+CLI 상단에도 출력합니다. 그룹 정답이 없으면 두 번째 점수는 미측정이며 이름 점수는 그대로입니다.
+두 지표의 핵심은 각각 이름 recall과 그룹 recall입니다. 그룹 점수는 실제 혈당 영향의 예측 정확도가 아닙니다.
+
 새 기준·그룹별 근거·라벨 작성법·실험 절차는 [혈당 관리 평가 기준](glucose-management-policy.md)을
 확인하세요. `labels.management.example.json`은 새 라벨 형식 예시이며 실제 평가 데이터가 아닙니다.
 
@@ -170,8 +195,8 @@ python ml-service/eval_food.py --prompt-version examples-v3 --limit 100 --split 
 그룹 precision은 `management_annotation_complete=true`인 사진에서만 측정합니다.
 보고서에 정책 버전·해시·전체 스냅샷·사진별 혼동을 보존합니다. 새 필드가 없으면 새 정답 지표는 미측정입니다.
 
-`glucose-v6`는 실험용 프롬프트이고 운영 기본값은 `examples-v3`입니다.
-API 스키마·모델·detail·축소 크기·식사 count 정책은 바꾸지 않았습니다.
+`glucose-v6`는 실험용 프롬프트입니다. 당시 비교는 v3 기준으로 API 스키마·모델·detail·축소 크기·식사 count 정책을 유지했습니다.
+2026-10-08의 최신 기본값 변경은 아래 대분류 항목을 참고하세요.
 
 ```powershell
 python ml-service/eval_food.py --prompt-version glucose-v6 --check
@@ -180,6 +205,23 @@ python ml-service/eval_food.py --prompt-version glucose-v6 --limit 100
 
 두 번째 실행은 API 비용이 발생합니다. 새 그룹 지표는 기존 완료 목표를 대체하지 않으며
 목표치가 합의되지 않아 자동 PASS 판정에 넣지 않습니다. 실제 사진에서 개선됐다는 증거는 아직 없습니다.
+
+## 표시용 대분류 추가와 low 복귀 (2026-10-08)
+
+- 기본 프롬프트 `cuisine-v7`은 `examples-v3` 원문에 대분류 지침만 덧붙였습니다. v1~v6 원문은 그대로입니다.
+- 음식별 `food_group`은 `한식` / `일식` / `중식` / `간식` 또는 `null`입니다. `name`에는 음식명만 남깁니다.
+  화면 표시는 `food_group`이 있으면 `한식 - 김치찌개`처럼 조합하고, 없으면 음식명만 표시합니다.
+- 과일·쿠키·약과·사탕 등 먹는 간식은 나라보다 `간식`을 우선합니다. 음료·술·피자·파스타 등
+  네 범주 밖 음식과 모호한 볶음밥·생선구이 등은 `null`입니다. 배경·식기만으로 나라를 결정하지 않습니다.
+- 기존 `category_hint`와 독립적입니다. 사탕은 `간식` + `FAST_SUGAR`, 김밥은 `한식` + `MEAL`이고
+  식사 `count=null` 정책도 유지합니다. 혈당 관리 그룹이나 영양/혈당 유사도 점수를 뜻하지 않습니다.
+- Pydantic은 옛 원본 보고서의 누락 필드를 `null`로 읽습니다. OpenAI SDK의 엄격한 구조화 스키마에는
+  필수 nullable 필드로 전송합니다. [공식 구조화 출력 지침](https://developers.openai.com/api/docs/guides/structured-outputs)을 따릅니다.
+- 백엔드 인식 결과 조회도 `food_group`을 전달합니다. intake DB 저장과 iOS 실제 화면 변경은 이번 범위 밖입니다.
+- 유료 API 재평가는 이번 변경에서 실행하지 않았습니다. 기존 71%/76%는 모두 **v3의 옛 스키마** 결과이며
+  v7 성능으로 인용하면 안 됩니다. 대분류 정답/채점은 아직 없으므로 대분류 정확도도 미측정입니다.
+  새 실험은 별도 출력 폴더를 쓰고 스키마가 바뀐 사실을 기록해야 합니다. 과거 비교 도구의 조건 검사를
+  우회해서 현재 스키마를 옛 high/low 실험과 동일하다고 취급하지 마세요.
 
 ## 사진 수집
 

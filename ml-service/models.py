@@ -11,6 +11,10 @@ class PackagedProduct(BaseModel):
 
 class FoodItem(BaseModel):
     name: str
+    food_group: Literal["한식", "일식", "중식", "간식"] | None = Field(
+        default=None,
+        description="표시용 대분류. 네 범주 밖 음식·음료 또는 구분이 불확실하면 null. category_hint와 별개.",
+    )
     count: int | None
     unit: Literal["개", "조각", "팩", "컵", "그릇", "공기", "병", "잔"]
     category_hint: Literal[
@@ -51,6 +55,7 @@ class FoodRecognitionResponse(FoodRecognitionPayload):
                     "items": [
                         {
                             "name": "초콜릿",
+                            "food_group": "간식",
                             "count": 3,
                             "unit": "조각",
                             "category_hint": "FAST_SUGAR",

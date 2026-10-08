@@ -25,6 +25,7 @@ class FakeFoodRecognizer:
                 items=[
                     FoodItem(
                         name="김밥",
+                        food_group="한식",
                         count=1,
                         unit="개",
                         category_hint="MEAL",
@@ -98,6 +99,7 @@ def test_health_and_food_endpoint(monkeypatch):
     assert response.status_code == 200
     assert response.headers["X-Request-Id"] == "request-123"
     assert response.json()["items"][0]["name"] == "김밥"
+    assert response.json()["items"][0]["food_group"] == "한식"
     assert response.json()["meta"]["model"] == "fake"
 
 
