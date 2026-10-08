@@ -10,7 +10,8 @@ import Foundation
 struct RecognitionResponse: Decodable {
     let isFoodPhoto: Bool
     let items: [RecognizedFoodItem]
-    let likelyConsumedAll: Bool
+    /// 운영 프롬프트(v3)는 항상 null을 돌려준다(사진 한 장으로 섭취 여부를 알 수 없음)
+    let likelyConsumedAll: Bool?
 }
 
 struct RecognizedFoodItem: Decodable {
