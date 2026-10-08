@@ -1,10 +1,44 @@
+# OS
+.DS_Store
+
+# 환경변수 / 비밀값
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.mobileprovision
+ios/glucose/Config/*.xcconfig
+!ios/glucose/Config/*.xcconfig.example
+
+# 건강정보 (혈당 CSV, 그래프, 음식 사진 등)
+*.csv
+*.xlsx
+data/
+samples/
+
+# 에디터
+.idea/
+.vscode/
+
+# 빌드 산출물
+build/
+.gradle/
+
+# Xcode
+xcuserdata/
+DerivedData/
+*.xcuserstate
+
+# 파이썬
 .venv/
 .venv-eval/
-
-.env
-
 __pycache__/
 *.pyc
+
+# 로그
+*.log
 
 IMPLEMENTATION_LOG_2026-10-05.md
 

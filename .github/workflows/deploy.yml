@@ -4,6 +4,11 @@ name: deploy
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - 'design/**'
+      - 'AI_use_organize/**'
+      - '**.md'
   workflow_dispatch:
 
 permissions:
@@ -68,7 +73,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ml-service
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           push: true
           labels: org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
           tags: |

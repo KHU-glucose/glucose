@@ -54,7 +54,7 @@ class OpenAIFoodRecognizer:
             model
             or os.getenv("FOOD_MODEL")
             or os.getenv("OPENAI_MODEL")
-            or "gpt-6-luna"
+            or "luna"
         )
         self.timeout_seconds = timeout_seconds
         self.prompt_version = prompt_version
