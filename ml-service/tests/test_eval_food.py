@@ -4,7 +4,7 @@ import json
 import pytest
 from PIL import Image
 
-from eval_food import load_dataset, matching_count, names_match, score_cases
+from eval_food import assess_dataset, assess_targets, load_dataset, matching_count, names_match, score_cases
 
 
 def case(expected, prediction, is_food=True):
@@ -111,7 +111,7 @@ def test_runner_prepares_real_images_and_saves_scores_without_sending_labels(tmp
         model = "fake-model"
         _client = None
 
-        def __init__(self, model=None):
+        def __init__(self, model=None, prompt_version=None):
             pass
 
         async def recognize(self, image_bytes, mime, context):
@@ -148,6 +148,57 @@ def test_runner_prepares_real_images_and_saves_scores_without_sending_labels(tmp
     assert saved["metrics"]["reported_input_tokens"] == 2
     assert saved["prompt_sha256"]
     assert saved["cases"][0]["image_sha256"]
+    assert saved["prompt_text"]
+    assert saved["settings"]["image_detail"] == "low"
+    assert saved["completion_passed"] is False
 
     with pytest.raises(FileExistsError):
         asyncio.run(run_evaluation(labels, tmp_path, {}, output, None))
+
+
+def test_meals_are_not_counted_as_snack_count_targets():
+    metrics = score_cases([case(
+        [{"name": "밥", "count": 1, "unit": "공기", "category_hint": "MEAL"},
+         {"name": "쿠키", "count": 3, "unit": "개", "category_hint": "SNACK"}],
+        {"is_food_photo": True, "items": [
+            {"name": "밥", "count": None, "unit": "공기", "category_hint": "MEAL"},
+            {"name": "쿠키", "count": 3, "unit": "개", "category_hint": "SNACK"},
+        ]},
+    )])
+    assert metrics["snack_count_and_unit_accuracy"] == {"correct": 1, "total": 1, "rate": 1.0}
+
+
+def test_fast_sugar_requires_name_and_detection_and_penalizes_failures():
+    positive = {"name": "사탕", "category_hint": "FAST_SUGAR"}
+    negative = {"name": "쿠키", "category_hint": "SNACK"}
+    rows = [case([positive, negative], {"is_food_photo": True, "items": [
+        {"name": "사탕", "category_hint": "SNACK"},
+        {"name": "쿠키", "category_hint": "FAST_SUGAR"},
+    ]}), case([positive], None)]
+    metrics = score_cases(rows)
+    assert metrics["fast_sugar_detection_accuracy"] == {"correct": 0, "total": 3, "rate": 0.0}
+    assert metrics["fast_sugar_positive_recall"]["total"] == 2
+    assert metrics["fast_sugar_negative_accuracy"]["total"] == 1
+
+
+def test_missing_classes_and_measurements_cannot_pass_targets():
+    metrics = score_cases([case(
+        [{"name": "쿠키", "category_hint": "SNACK"}],
+        {"is_food_photo": True, "items": [{"name": "쿠키", "category_hint": "SNACK"}]},
+    )])
+    targets = assess_targets(metrics)
+    assert targets["fast_sugar_detection_accuracy"]["status"] == "INSUFFICIENT_CLASSES"
+    assert targets["snack_count_and_unit_accuracy"]["status"] == "NOT_MEASURED"
+    assert targets["schema_validation_rate"]["status"] == "NOT_MEASURED"
+    assert targets["cost_per_image_usd"]["status"] == "NOT_MEASURED"
+    assert assess_dataset([], "holdout")["ready"] is False
+
+
+def test_development_set_is_not_final_completion_evidence():
+    rows = []
+    for group, number in {"MEAL": 25, "SNACK": 15, "HYPO": 20, "PACKAGED": 10, "NONFOOD": 10}.items():
+        for _ in range(number):
+            rows.append({"expected": {"dataset_group": group, "annotation_complete": True,
+                "items": [{"count": 1, "category_hint": "SNACK"}] if group == "SNACK" else []}})
+    assert assess_dataset(rows, "development")["ready"] is False
+    assert assess_dataset(rows, "holdout")["ready"] is True

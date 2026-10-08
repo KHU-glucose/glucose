@@ -1,7 +1,10 @@
 import asyncio
+import hashlib
 from types import SimpleNamespace
 
+import pytest
 from food_recognizer import OpenAIFoodRecognizer
+from food_prompts import PROMPTS, get_food_prompt
 from models import FoodItem, FoodRecognitionPayload
 
 
@@ -46,3 +49,28 @@ def test_openai_recognizer_returns_contract_payload_and_usage():
     user_content = responses.calls[0]["input"][1]["content"]
     assert "SNACK" in user_content[0]["text"]
     assert user_content[1]["image_url"].startswith("data:image/jpeg;base64,")
+
+
+@pytest.mark.parametrize("version", list(PROMPTS))
+def test_selected_prompt_is_sent_without_changing_model_or_image_settings(version):
+    responses = FakeResponses()
+    recognizer = OpenAIFoodRecognizer(model="test-model", client=SimpleNamespace(responses=responses),
+                                     prompt_version=version)
+    asyncio.run(recognizer.recognize(b"image", "image/jpeg", None))
+    call = responses.calls[0]
+    assert call["input"][0]["content"] == get_food_prompt(version)
+    assert call["model"] == "test-model"
+    assert call["input"][1]["content"][1]["detail"] == "low"
+    assert call["max_output_tokens"] == 1200
+    assert call["store"] is False
+
+
+def test_unknown_prompt_version_is_rejected_before_api_call():
+    with pytest.raises(KeyError):
+        OpenAIFoodRecognizer(prompt_version="unknown")
+
+
+def test_baseline_matches_preserved_october_6_evaluation_prompt():
+    assert hashlib.sha256(get_food_prompt("baseline-v1").encode()).hexdigest() == (
+        "b8e6dd0883e7cfdc28006260eb192d2512d719f468e8c2b13c2f63d01a28b27e"
+    )

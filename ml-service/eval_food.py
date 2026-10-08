@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt
+from food_prompts import ACTIVE_PROMPT_VERSION, PROMPTS, get_food_prompt
 
 
 class ExpectedFood(BaseModel):
@@ -31,6 +32,8 @@ class Label(BaseModel):
     context: Literal["MEAL", "SNACK", "HYPO_TREATMENT", "ALCOHOL"] | None = None
     source: str | None = None
     license: str | None = None
+    dataset_group: Literal["MEAL", "SNACK", "HYPO", "PACKAGED", "NONFOOD"] | None = None
+    annotation_complete: StrictBool = False
 
 
 def normalize_name(name: str) -> str:
@@ -42,7 +45,7 @@ def names_match(expected: dict, predicted: dict) -> bool:
     return normalize_name(predicted["name"]) in {normalize_name(name) for name in accepted}
 
 
-def matching_count(expected: list[dict], predicted: list[dict], predicate) -> int:
+def matching_pairs(expected: list[dict], predicted: list[dict], predicate) -> list[tuple[int, int]]:
     """Maximum one-to-one matching; one prediction cannot score multiple labels."""
     owners: dict[int, int] = {}
 
@@ -56,11 +59,19 @@ def matching_count(expected: list[dict], predicted: list[dict], predicate) -> in
                 return True
         return False
 
-    return sum(assign(index, set()) for index in range(len(expected)))
+    for index in range(len(expected)):
+        assign(index, set())
+    return sorted((owner, candidate) for candidate, owner in owners.items())
+
+
+def matching_count(expected: list[dict], predicted: list[dict], predicate) -> int:
+    return len(matching_pairs(expected, predicted, predicate))
 
 
 def fraction(correct: int, total: int) -> dict:
     return {"correct": correct, "total": total, "rate": round(correct / total, 4) if total else None}
+
+
 
 
 def score_cases(cases: list[dict]) -> dict:
@@ -69,6 +80,8 @@ def score_cases(cases: list[dict]) -> dict:
     successes = 0
     latencies = []
     input_tokens = output_tokens = 0
+    snack_count_hits = snack_count_total = fast_hits = fast_total = 0
+    fast_positive_hits = fast_positive_total = fast_negative_hits = fast_negative_total = 0
     for case in cases:
         truth = case["expected"]
         prediction = case.get("prediction")
@@ -76,6 +89,23 @@ def score_cases(cases: list[dict]) -> dict:
         predicted = prediction["items"] if prediction else []
         countable = [item for item in expected if item.get("count") is not None]
         categorized = [item for item in expected if item.get("category_hint") is not None]
+        snack_countable = [item for item in countable if item.get("category_hint") in {"SNACK", "FAST_SUGAR"}]
+        snack_count_total += len(snack_countable)
+        snack_count_hits += matching_count(
+            snack_countable, predicted,
+            lambda a, b: names_match(a, b) and a["count"] == b.get("count") and a["unit"] == b.get("unit"),
+        )
+        fast_total += len(categorized)
+        fast_predicate = lambda a, b: names_match(a, b) and (
+            (a["category_hint"] == "FAST_SUGAR") == (b.get("category_hint") == "FAST_SUGAR")
+        )
+        fast_hits += matching_count(categorized, predicted, fast_predicate)
+        positives = [item for item in categorized if item["category_hint"] == "FAST_SUGAR"]
+        negatives = [item for item in categorized if item["category_hint"] != "FAST_SUGAR"]
+        fast_positive_total += len(positives)
+        fast_negative_total += len(negatives)
+        fast_positive_hits += matching_count(positives, predicted, fast_predicate)
+        fast_negative_hits += matching_count(negatives, predicted, fast_predicate)
         expected_total += len(expected)
         predicted_total += len(predicted)
         count_total += len(countable)
@@ -100,7 +130,7 @@ def score_cases(cases: list[dict]) -> dict:
             latencies.append(case["latency_ms"])
             input_tokens += case["meta"]["input_tokens"]
             output_tokens += case["meta"]["output_tokens"]
-    return {
+    metrics = {
         "attempted_images": len(cases),
         "successful_response_rate": fraction(successes, len(cases)),
         "food_photo_accuracy": fraction(photo_hits, len(cases)),
@@ -111,10 +141,55 @@ def score_cases(cases: list[dict]) -> dict:
         if expected_total + predicted_total else None,
         "count_and_unit_accuracy": fraction(count_hits, count_total),
         "category_hint_accuracy": fraction(category_hits, category_total),
+        "snack_count_and_unit_accuracy": fraction(snack_count_hits, snack_count_total),
+        "fast_sugar_detection_accuracy": fraction(fast_hits, fast_total),
+        "fast_sugar_positive_recall": fraction(fast_positive_hits, fast_positive_total),
+        "fast_sugar_negative_accuracy": fraction(fast_negative_hits, fast_negative_total),
         "median_success_latency_ms": statistics.median(latencies) if latencies else None,
+        "median_attempt_latency_ms": statistics.median([case["latency_ms"] for case in cases]) if cases else None,
         "reported_input_tokens": input_tokens,
         "reported_output_tokens": output_tokens,
     }
+    return metrics
+
+
+def assess_targets(metrics: dict) -> dict:
+    """Per-run observations, not a completion claim or pure schema-validation metric."""
+    targets = {}
+    for key, threshold in {
+        "food_name_recall": 0.85,
+        "snack_count_and_unit_accuracy": 0.80,
+        "fast_sugar_detection_accuracy": 0.95,
+        "nonfood_rejection_rate": 0.95,
+        "successful_response_rate": 0.99,
+    }.items():
+        metric = metrics[key]
+        rate = metric["rate"]
+        targets[key] = {**metric, "target": threshold, "status":
+                        "NOT_MEASURED" if rate is None else "PASS" if metric["correct"] / metric["total"] >= threshold else "FAIL"}
+    if not metrics["fast_sugar_positive_recall"]["total"] or not metrics["fast_sugar_negative_accuracy"]["total"]:
+        targets["fast_sugar_detection_accuracy"]["status"] = "INSUFFICIENT_CLASSES"
+    latency = metrics["median_attempt_latency_ms"]
+    targets["median_attempt_latency_ms"] = {"value": latency, "target": 3000,
+        "status": "NOT_MEASURED" if latency is None else "PASS" if latency <= 3000 else "FAIL"}
+    targets["schema_validation_rate"] = {"target": 0.99, "status": "NOT_MEASURED",
+        "note": "SDK parse 성공은 검증된 최종 응답만 셈. 재시도 전 스키마 실패까지 계측하지 않아 순수 통과율은 별도 검증 필요."}
+    targets["cost_per_image_usd"] = {"target": 0.003, "status": "NOT_MEASURED",
+        "note": "토큰 사용량은 기록하지만 단가·실패·재시도 전체 청구 비용은 이 도구로 확정하지 않음."}
+    return targets
+
+
+def assess_dataset(cases: list[dict], split: str) -> dict:
+    quotas = {"MEAL": 25, "SNACK": 15, "HYPO": 20, "PACKAGED": 10, "NONFOOD": 10}
+    groups = {group: sum(case["expected"].get("dataset_group") == group for case in cases) for group in quotas}
+    complete = bool(cases) and all(case["expected"].get("annotation_complete") for case in cases)
+    count_labels = sum(item.get("count") is not None and item.get("category_hint") in {"SNACK", "FAST_SUGAR"}
+                       for case in cases for item in case["expected"]["items"])
+    ready = (60 <= len(cases) <= 100 and all(groups[group] >= quota for group, quota in quotas.items())
+             and complete and count_labels >= 15 and split == "holdout")
+    return {"ready": ready, "split": split, "groups": groups, "required_groups": quotas,
+            "annotations_complete": complete, "count_labelled_snacks": count_labels,
+            "note": "완료 판정에는 미사용 holdout과 모든 보이는 음식의 정답이 필요. 그룹을 배타적으로 채우면 최소 80장."}
 
 
 def load_dataset(labels_path: Path, images_root: Path) -> list[Label]:
@@ -148,14 +223,16 @@ def load_dataset(labels_path: Path, images_root: Path) -> list[Label]:
     return labels
 
 
-async def run_evaluation(labels: list[Label], images_root: Path, report: dict, output: Path, model: str | None):
+async def run_evaluation(labels: list[Label], images_root: Path, report: dict, output: Path, model: str | None,
+                         prompt_version: str = ACTIVE_PROMPT_VERSION):
     from fastapi import UploadFile
     from starlette.datastructures import Headers
 
-    from food_recognizer import FOOD_PROMPT, FoodRecognizerFailure, OpenAIFoodRecognizer
-    from main import ServiceError, validate_and_prepare_image
+    from food_recognizer import IMAGE_DETAIL, MAX_OUTPUT_TOKENS, FoodRecognizerFailure, OpenAIFoodRecognizer
+    from main import MAX_IMAGE_EDGE, ServiceError, validate_and_prepare_image
+    from models import FoodRecognitionPayload
 
-    recognizer = OpenAIFoodRecognizer(model=model)
+    recognizer = OpenAIFoodRecognizer(model=model, prompt_version=prompt_version)
     if not recognizer.api_key:
         raise ValueError("OPENAI_API_KEY가 필요합니다. 저장소 루트 .env를 확인하세요")
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -163,11 +240,20 @@ async def run_evaluation(labels: list[Label], images_root: Path, report: dict, o
     with output.open("x", encoding="utf-8"):
         pass
     report["model"] = recognizer.model
-    report["prompt_sha256"] = hashlib.sha256(FOOD_PROMPT.encode()).hexdigest()
+    report["prompt_version"] = prompt_version
+    report["prompt_text"] = get_food_prompt(prompt_version)
+    report["prompt_sha256"] = hashlib.sha256(report["prompt_text"].encode()).hexdigest()
+    report["settings"] = {"image_detail": IMAGE_DETAIL, "max_image_edge": MAX_IMAGE_EDGE,
+                          "max_output_tokens": MAX_OUTPUT_TOKENS, "context_sent": "optional label.context only"}
+    report["schema_sha256"] = hashlib.sha256(json.dumps(FoodRecognitionPayload.model_json_schema(), sort_keys=True).encode()).hexdigest()
     report["cases"] = []
 
     def save_report():
         report["metrics"] = score_cases(report["cases"])
+        report["targets"] = assess_targets(report["metrics"])
+        report["dataset_readiness"] = assess_dataset(report["cases"], report.get("split", "development"))
+        report["completion_passed"] = (report.get("completed", False) and report["dataset_readiness"]["ready"]
+            and all(target["status"] == "PASS" for target in report["targets"].values()))
         output.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
 
     save_report()
@@ -207,6 +293,9 @@ def main():
     parser.add_argument("--images", type=Path, default=Path("eval/food/images"))
     parser.add_argument("--output", type=Path)
     parser.add_argument("--model", help="없으면 현재 FOOD_MODEL / OPENAI_MODEL 설정 사용")
+    parser.add_argument("--prompt-version", choices=list(PROMPTS), default=ACTIVE_PROMPT_VERSION)
+    parser.add_argument("--split", choices=["development", "holdout"], default="development")
+    parser.add_argument("--require-targets", action="store_true", help="완료 기준 미달·미측정·데이터 부족이면 종료 코드 1")
     parser.add_argument("--limit", type=int, default=10, help="실행할 최대 사진 수 (기본 10)")
     parser.add_argument("--check", action="store_true", help="사진과 정답만 검사; AI 호출 없음")
     args = parser.parse_args()
@@ -224,13 +313,16 @@ def main():
             "created_at_utc": now.isoformat(), "dataset_size": len(labels),
             "selected_images": len(selected), "completed": False,
             "labels_sha256": hashlib.sha256(args.labels.read_bytes()).hexdigest(),
+            "split": args.split,
             "note": "API 실패도 정확도 분모에 포함. 재시도 비용은 SDK 메타에 모두 포함되지 않을 수 있음.",
         }
-        asyncio.run(run_evaluation(selected, args.images, report, output, args.model))
+        asyncio.run(run_evaluation(selected, args.images, report, output, args.model, args.prompt_version))
         titles = {
             "food_name_recall": "정답 음식 인식률",
             "food_name_precision": "AI 음식명 정밀도",
             "count_and_unit_accuracy": "개수·단위 일치율",
+            "snack_count_and_unit_accuracy": "간식 낱개 개수·단위 일치율",
+            "fast_sugar_detection_accuracy": "계약상 FAST_SUGAR 구분 일치율",
             "food_photo_accuracy": "음식 여부 판별 정확도",
             "nonfood_rejection_rate": "비음식 사진 거르기",
             "category_hint_accuracy": "음식 분류 일치율",
@@ -244,6 +336,9 @@ def main():
                 print(f"{title}: {metric['rate'] * 100:.1f}% ({metric['correct']}/{metric['total']})")
         print(f"성공 응답 시간 중앙값: {report['metrics']['median_success_latency_ms']}ms")
         print(f"평가 보고서: {output}")
+        print(f"완료 기준 종합: {'통과' if report['completion_passed'] else '미달 또는 미검증'}")
+        if args.require_targets:
+            return 0 if report["completion_passed"] else 1
         return 0 if report["metrics"]["successful_response_rate"]["rate"] == 1 else 1
     except (ValueError, OSError) as error:
         parser.exit(2, f"평가를 시작하지 못했습니다: {error}\n")

@@ -10,23 +10,12 @@ from openai import AsyncOpenAI
 from pydantic import ValidationError
 
 from models import FoodRecognitionMeta, FoodRecognitionPayload
+from food_prompts import ACTIVE_PROMPT_VERSION, get_food_prompt
 
 
-FOOD_PROMPT = """
-당신은 음식 사진 인식기입니다. 반드시 제공된 구조화 출력 스키마로만 답하세요.
-
-규칙:
-- 사진에 실제 음식이나 음료가 없으면 is_food_photo=false, items=[], likely_consumed_all=null로 답합니다.
-- 각 음식은 한국어 일반 명칭으로 분리합니다. 브랜드가 보여도 name에는 일반 명칭을 씁니다.
-- count는 낱개 수를 신뢰성 있게 셀 수 있을 때만 정수로 씁니다. 그릇 음식은 한 그릇이면 1이고, 셀 수 없으면 null입니다.
-- unit은 개, 조각, 팩, 컵, 그릇, 공기, 병, 잔 중 하나만 사용합니다.
-- category_hint는 MEAL, SNACK, FAST_SUGAR, DRINK, ALCOHOL 중 하나입니다.
-- tags는 HIGH_FAT, HIGH_CARB, FAST_SUGAR 중 사진에서 근거가 있는 값만 사용합니다.
-- 포장 제품이고 브랜드, 제품명, 용량을 읽을 수 있을 때 packaged_product에 기록합니다.
-- confidence는 high, medium, low 중 하나입니다.
-- 먹기 전 사진인지 확실하면 likely_consumed_all=true, 남은 음식이면 false, 판단할 수 없으면 null입니다.
-- 칼로리, 탄수화물 g, 당류 g, 인슐린 용량, 치료 적합성은 추정하거나 반환하지 않습니다.
-""".strip()
+FOOD_PROMPT = get_food_prompt(ACTIVE_PROMPT_VERSION)
+IMAGE_DETAIL = "low"
+MAX_OUTPUT_TOKENS = 1200
 
 
 class FoodRecognizerFailure(Exception):
@@ -58,6 +47,7 @@ class OpenAIFoodRecognizer:
         model: str | None = None,
         timeout_seconds: float = 10.0,
         client: AsyncOpenAI | None = None,
+        prompt_version: str = ACTIVE_PROMPT_VERSION,
     ):
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
         self.model = (
@@ -67,6 +57,8 @@ class OpenAIFoodRecognizer:
             or "gpt-6-luna"
         )
         self.timeout_seconds = timeout_seconds
+        self.prompt_version = prompt_version
+        self.prompt = get_food_prompt(prompt_version)
         self._client = client
 
     def _get_client(self) -> AsyncOpenAI:
@@ -98,7 +90,7 @@ class OpenAIFoodRecognizer:
                     response = await client.responses.parse(
                         model=self.model,
                         input=[
-                            {"role": "system", "content": FOOD_PROMPT},
+                            {"role": "system", "content": self.prompt},
                             {
                                 "role": "user",
                                 "content": [
@@ -113,13 +105,13 @@ class OpenAIFoodRecognizer:
                                     {
                                         "type": "input_image",
                                         "image_url": image_url,
-                                        "detail": "low",
+                                        "detail": IMAGE_DETAIL,
                                     },
                                 ],
                             },
                         ],
                         text_format=FoodRecognitionPayload,
-                        max_output_tokens=1200,
+                        max_output_tokens=MAX_OUTPUT_TOKENS,
                         store=False,
                     )
 

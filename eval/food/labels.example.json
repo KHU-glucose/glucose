@@ -2,7 +2,8 @@
   {
     "file": "chocolate.jpg",
     "is_food_photo": true,
-    "context": "HYPO_TREATMENT",
+    "dataset_group": "HYPO",
+    "annotation_complete": true,
     "items": [
       {"name": "초콜릿", "count": 3, "unit": "조각", "category_hint": "FAST_SUGAR"}
     ],
@@ -12,13 +13,17 @@
   {
     "file": "rice.jpg",
     "is_food_photo": true,
+    "dataset_group": "MEAL",
+    "annotation_complete": true,
     "items": [
-      {"name": "흰쌀밥", "aliases": ["쌀밥", "밥"], "count": 1, "unit": "공기", "category_hint": "MEAL"}
+      {"name": "흰쌀밥", "aliases": ["쌀밥", "밥"], "count": null, "unit": "공기", "category_hint": "MEAL"}
     ]
   },
   {
     "file": "keyboard.jpg",
     "is_food_photo": false,
+    "dataset_group": "NONFOOD",
+    "annotation_complete": true,
     "items": []
   }
 ]
