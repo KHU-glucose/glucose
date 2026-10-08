@@ -98,8 +98,8 @@
   {
     "originalName": "공통-디자인-기준.md",
     "path": "design/figma/공통-디자인-기준.md",
-    "bytes": 2824,
-    "sha256": "239968e0e5875e5f344e2ef8723afbe03f5174dbdf8dc1d446c8575ae1f67613"
+    "bytes": 4259,
+    "sha256": "1c2d52ab284a5fb59303bbf490cd1d11ebc84745b2116920c44c8256ce504067"
   },
   {
     "originalName": "기준화면-인바디-보수계-2026-10-08.md",
@@ -126,6 +126,12 @@
     "sha256": "f0d618eb7bdd7c9c93ff6a21be5e45c441c6ed81b326a5412b1f49480368a1c1"
   },
   {
+    "originalName": "정리내역.md",
+    "path": "design/figma/정리내역.md",
+    "bytes": 1039,
+    "sha256": "d54d5ded543f5b85890021b275f0b52a2a1ad8a2b647c108423f1272f3df7528"
+  },
+  {
     "originalName": "주간리포트-사용자화면-2026-10-08.md",
     "path": "design/figma/주간리포트-사용자화면-2026-10-08.md",
     "bytes": 4125,
@@ -134,8 +140,8 @@
   {
     "originalName": "팀원-사용안내.md",
     "path": "design/figma/팀원-사용안내.md",
-    "bytes": 2069,
-    "sha256": "022adfb921d9147d62ff5c947c0183addea3cb38a3de0d2754361ed983614efe"
+    "bytes": 1980,
+    "sha256": "2ff5dee924aac86003f875709ad4b4c78c3c4d21e9c96438ecfc6b43d58b86c2"
   },
   {
     "originalName": "파일정리-2026-10-07.md",
@@ -150,39 +156,9 @@
     "sha256": "b218bd370c956349f8bb76f096c9d54820d2a69877f8bc42fd500e21a656e20b"
   },
   {
-    "originalName": "2.png",
-    "path": "design/prototypes/2.png",
-    "bytes": 266567,
-    "sha256": "ac9afc1d07e7e647bad9de82e0c1a92c5b6a1cb182f9dfff12421f6831f57810"
-  },
-  {
-    "originalName": "3.png",
-    "path": "design/prototypes/3.png",
-    "bytes": 234079,
-    "sha256": "9ed1e5c7af09203291242cf87ee2471828d2cf66847a93fbe722516042b55957"
-  },
-  {
-    "originalName": "4.png",
-    "path": "design/prototypes/4.png",
-    "bytes": 352320,
-    "sha256": "1cac8cedad2b73b65eadd6140b33f1342ae97be27dab34885c2d80fee6770a06"
-  },
-  {
-    "originalName": "5.png",
-    "path": "design/prototypes/5.png",
-    "bytes": 118611,
-    "sha256": "9545e011eac4eeb01c37bbfb2bba3c52974e297664380f2d1668ac7eb122fa05"
-  },
-  {
-    "originalName": "glucose-design (9).html",
-    "path": "design/prototypes/glucose-design (9).html",
-    "bytes": 716028,
-    "sha256": "2dcb4c8e65e9fdf419c5ad0a18e0134cbd6c332a0630eaf0bf8f4c84681359b6"
-  },
-  {
     "originalName": "README.md",
     "path": "design/README.md",
-    "bytes": 2035,
-    "sha256": "d957459dc0c34f300d4f955fc1c27c61e9eb3a41875d3fff12ff49dc3d9307af"
+    "bytes": 1847,
+    "sha256": "8aca6a1b29ac1e5b3abd523462cb995ea45fb9dc18f6ec54824722af8b442b6e"
   }
 ]
