@@ -242,9 +242,49 @@ R2(S3 호환) presigned PUT URL을 발급한다. **앱이 이 URL로 R2에 직�
 | `INSULIN_EVENT_NOT_FOUND` | 404 | 인슐린 기록 없음/본인 소유 아님 |
 | `INTERNAL_ERROR` | 500 | 서버 오류 |
 
-이후 단계(그래프, 리포트)에서 추가되는 코드는 해당 PR에서 이 표에 이어 추가한다.
+| `GLUCOSE_GRAPH_NOT_FOUND` | 404 | 그래프 업로드 없음/본인 소유 아님 |
+| `GLUCOSE_GRAPH_NOT_UPLOADED` | 409 | R2 업로드 전에 완료 통보함 |
+| `GRAPH_NOT_READY` | 409 | 그래프 분석 job이 아직 대기/처리 중 |
+| `GRAPH_PARSE_FAILED` | 422 | 그래프 인식 실패(격자·눈금·날짜 인식 불가, 데이터 10% 미만 등) |
+| `GLUCOSE_DAY_NOT_FOUND` | 404 | 해당 날짜의 혈당 데이터 없음 |
 
-## 14. 앞으로 추가될 것 (문서 자리만 미리 잡아둠)
+이후 단계(리포트)에서 추가되는 코드는 해당 PR에서 이 표에 이어 추가한다.
 
-- 혈당 그래프 업로드 (B5)
+## 14. 혈당 그래프 (B5)
+
+리브레 앱에서 공유한 일일 그래프 이미지 1장을 업로드하면 ml-service가 OCR로 그 날의 혈당 시계열을 읽어온다.
+업로드 자체는 어떤 날짜인지 모른 채로 시작하고(이미지에서 날짜를 읽는 건 ml-service 몫), 분석이 끝나야 날짜를 알 수 있다.
+**같은 사용자의 같은 날짜로 다시 업로드하면 기존 데이터를 덮어쓴다**(재업로드 정책, Dave 확인).
+
+### `POST /v1/glucose-graphs` — 업로드 시작
+```json
+{ "content_type": "image/jpeg" }
+```
+응답 201: `{ "upload_id": "<uuid>", "upload_url": "<presigned PUT URL>", "object_key": "graphs/...", "expires_in": 600 }`
+
+### `POST /v1/glucose-graphs/{uploadId}/complete` — 업로드 완료 통보
+R2에 실제로 올라왔는지 확인한 뒤 그래프 분석을 백그라운드 job으로 큐에 넣는다(응답은 ml-service를 기다리지 않는다).
+응답: `204 No Content`
+
+### `GET /v1/glucose-graphs/{uploadId}` — 분석 상태 조회
+분석 중이면 409 `GRAPH_NOT_READY`, 실패했으면 422 `GRAPH_PARSE_FAILED`.
+완료되면 200: `{ "date": "2026-10-01", "coverage_ratio": 0.94 }`
+
+### `GET /v1/glucose-readings/{date}` — 날짜별 혈당 시계열 조회
+`date`는 `YYYY-MM-DD`. 응답 200:
+```json
+{
+  "date": "2026-10-01",
+  "coverage_ratio": 0.94,
+  "readings": [
+    { "time": "00:00", "value": 120, "flag": "NORMAL" },
+    { "time": "00:15", "value": null, "flag": "MISSING" }
+  ]
+}
+```
+`value`가 `null`인 구간은 **보간하지 않은 결측**이다. 해당 날짜에 분석 완료된 그래프가 없으면 404 `GLUCOSE_DAY_NOT_FOUND`.
+
+## 15. 앞으로 추가될 것 (문서 자리만 미리 잡아둠)
+
+- 에피소드/반동 판정 (B6)
 - 일일·주간 리포트 (B7)

@@ -67,6 +67,29 @@ public class MlServiceClient {
         }
     }
 
+    /** POST /v1/graph/parse. 성공 시 응답 JSON 원문을 그대로 돌려준다. */
+    public String parseGraph(byte[] image, String contentType) {
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        HttpHeaders imagePartHeaders = new HttpHeaders();
+        imagePartHeaders.setContentType(MediaType.parseMediaType(contentType));
+        body.add("image", new HttpEntity<>(new NamedByteArrayResource(image, extensionOf(contentType)), imagePartHeaders));
+
+        try {
+            return restClient.post()
+                    .uri("/v1/graph/parse")
+                    .header("X-Internal-Token", properties.internalToken())
+                    .header("X-Request-Id", UUID.randomUUID().toString())
+                    .contentType(MediaType.MULTIPART_FORM_DATA)
+                    .body(body)
+                    .retrieve()
+                    .body(String.class);
+        } catch (HttpStatusCodeException e) {
+            throw mapStatusException(e);
+        } catch (ResourceAccessException e) {
+            throw new RetryableJobException("ml-service에 연결할 수 없습니다: " + e.getMessage(), e);
+        }
+    }
+
     private RuntimeException mapStatusException(HttpStatusCodeException e) {
         HttpStatusCode status = e.getStatusCode();
         String message = "ml-service 오류 (" + status.value() + "): " + e.getResponseBodyAsString();

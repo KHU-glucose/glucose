@@ -52,12 +52,13 @@ AI_use_organize/               경진대회 제출용 AI 활용 기록 (건드�
 
 ## 현재 상태와 다음 할 일
 - 백엔드 완료(머지): A1, B0(`docs/backend-api.md`), B1(Sign in with Apple + JWT), B2(사진 업로드 R2 presigned URL), B3(job 워커 + ml-service 연동, 업로드 완료→음식 인식 job 자동 적재), B4(intake/insulin_event CRUD, `food_catalog` 시드, `GET /v1/photos/{id}/recognition`). ml-service PR(실제 음식 인식 + 그래프 파서)도 머지됨.
-- iOS 완료(머지): I0(뼈대, 탭 4개), I1(기록 목록·상세 + Mock Repository).
-- 진행: **상세 작업 순서는 `docs/backend-plan.md`**(백엔드), `ios-plan.md`(iOS, Downloads에 있던 원본). I2(Sign in with Apple)는 PR 올라간 상태 — Apple Developer 계정에 새 Program License Agreement 동의가 필요해서 실기기 서명/테스트가 막혀 있었음(Dave가 동의 처리 중).
+- iOS 완료(머지): I0(뼈대, 탭 4개), I1(기록 목록·상세 + Mock Repository), I2(Sign in with Apple, 실기기 로그인 확인됨).
+- 진행: **상세 작업 순서는 `docs/backend-plan.md`**(백엔드), `ios-plan.md`(iOS, Downloads에 있던 원본). iOS는 I3~I7이 순서대로 PR 쌓여 있음(#15~#19, Dave 실기기 검증 대기). 백엔드는 B5(혈당 그래프 업로드·분석, `glucose_graph_upload`/`glucose_reading`, 재업로드는 덮어쓰기로 Dave 확인) 구현 완료, PR 올릴 예정 — 이어서 B6(에피소드)·B7(리포트) 진행 중. ml-service 음식 인식 기본 모델명 버그(`gpt-6-luna`→`luna`) 수정 PR #20도 올라간 상태.
 - Bundle ID는 `com.glubee.glubee`로 확정(앱 실제 이름 Glubee). `com.glucose.glucose`는 쓰지 않음 — 저장소/패키지명(`com.glucoselog`)은 그대로 유지.
-- 다음: 백엔드는 B5(혈당 그래프), iOS는 I2 실기기 검증 후 I3(사진 촬영).
+- 다음: 백엔드는 B6→B7, iOS는 I7 다음 Phase 4(I8 그래프 업로드).
 - 비용: AWS 크레딧(Free Tier)으로 Lightsail $12/월 차감 예정. 크레딧 소진 시점 확인 필요.
-- 미결정: 저장소 공개 여부(경진대회 요건 확인 후 private 전환 검토 — 지금은 public 유지), 그래프 파서 담당 범위/진행 상황(B5 일정 좌우), 그래프 재업로드 정책(덮어쓰기 vs 버전).
+- 결정됨: 그래프 재업로드는 **덮어쓰기**(같은 사용자·같은 날짜면 기존 것을 지우고 새 것으로 교체).
+- 미결정: 저장소 공개 여부(경진대회 요건 확인 후 private 전환 검토 — 지금은 public 유지), 그래프 파서 담당 범위/진행 상황(현재는 팀원이 실제 OpenCV+OCR 구현 완료).
 
 ## 작업 방식 선호
 - 결론부터, 간결하게. 한국어. 확신이 없는 사실(버전, 모델명 등)은 확인된 것처럼 쓰지 않는다.
