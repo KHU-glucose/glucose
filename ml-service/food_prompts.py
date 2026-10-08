@@ -161,7 +161,8 @@ CUISINE_V7 = EXAMPLES_V3 + """
 PROMPTS = {"baseline-v1": BASELINE_V1, "rules-v2": RULES_V2, "examples-v3": EXAMPLES_V3,
            "focused-v4": FOCUSED_V4, "contrast-v5": CONTRAST_V5, "glucose-v6": GLUCOSE_V6,
            "cuisine-v7": CUISINE_V7}
-ACTIVE_PROMPT_VERSION = "cuisine-v7"
+# cuisine-v7은 실제 사진 평가 전까지 실험 후보. 기존 100장으로 v3와 비교 후 전환한다(2026-10-08 Dave 결정).
+ACTIVE_PROMPT_VERSION = "examples-v3"
 # v4/v5/v6 remain experimental; v6 has no real-image performance evidence yet.
 # v7 adds display groups at the user's request; real-image accuracy is not measured yet.
 
