@@ -1,0 +1,37 @@
+{
+  "date": "2026-10-08",
+  "kind": "IMPLEMENTATION_VERIFICATION_NOT_MODEL_PERFORMANCE",
+  "user_objective": "혈당 관리 중심으로 음식 기록 분류·프롬프트·평가 기준 개선",
+  "production_prompt_version": "examples-v3",
+  "candidate_prompt_version": "glucose-v6",
+  "candidate_prompt_sha256": "5ccca1a87e7daf5fcaa3e9ad79d33931d61e77a71b6918ab18885938d013db9d",
+  "management_policy_version": "glucose-recording-v1",
+  "management_policy_canonical_sha256": "8ed0eb277db997ecaced9200fecd7f7fb62e0b02a2b47910ccfe279310219d23",
+  "output_schema_sha256": "3f40c013870557179638059dfdb2255887642bd6f2411d587a65db6fa3fabc11",
+  "changes": [
+    "기존 이름 채점을 유지한 별도 관리 그룹 recall/precision",
+    "확정 그룹과 상위 이름의 부분 분류를 분리",
+    "일반 구이/달콤한 양념/튀김옷 및 일반/제로 콜라 혼동 집계",
+    "사람이 지정한 중요 음식 미식별과 음식명 low 대리 지표",
+    "평가용 정답 필드 검증과 정책 전체 스냅샷/버전/해시 보존",
+    "혈당 관리 관찰 우선순위의 실험용 프롬프트 추가"
+  ],
+  "verification": {
+    "automated_tests": {"command": "python -m pytest ml-service/tests -q", "passed": 57, "failed": 0, "uses_real_openai_api": false, "predictions": "합성 코드 예제 또는 테스트 대역; 실제 사진 인식 성능의 근거 아님"},
+    "example_label_schema_rows": 5,
+    "existing_dataset_check": {"labels": "eval/food/labels.json", "images": "2018-01-011.한국음식이미지_sample", "valid_images": 10, "api_calls": 0},
+    "git_diff_whitespace_check": "PASS"
+  },
+  "real_image_v3_v6_comparison": {"status": "NOT_RUN", "reason": "기존 10장 정답에는 관리 그룹·중요 음식·불확실성 정답이 없고 모든 음식 정답도 완비되지 않음. 사람의 사전 라벨 작성 및 대표 비교 사진이 먼저 필요."},
+  "api_calls_this_task": 0,
+  "performance_improved": null,
+  "new_metric_target": null,
+  "unchanged": ["운영 API 응답 형식", "모델 선택 설정", "detail=low", "최대 768px", "MEAL count=null", "likely_consumed_all=null", "기존 완료 목표", "실제 정답 파일", "과거 평가 보고서"],
+  "limitations": [
+    "그룹은 기록용 평가이며 같은 혈당 반응을 의미하지 않음",
+    "생선 영양값은 식약처 2013년의 특정 참고 요리 100g 값이며 실제 사진의 측정값이 아님",
+    "그룹 미해결에는 정책 카탈로그 미등록이 포함됨",
+    "low는 음식명 확신의 대리 지표이며 영양 추정의 불확실성을 별도 검증하지 못함",
+    "실제 섭취량·개인 혈당 반응·치료 적합성·영양 DB 전체 연동은 구현하지 않음"
+  ]
+}

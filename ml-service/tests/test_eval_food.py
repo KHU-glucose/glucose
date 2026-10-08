@@ -137,7 +137,7 @@ def test_runner_prepares_real_images_and_saves_scores_without_sending_labels(tmp
     Image.new("RGB", (1200, 600), "white").save(tmp_path / "sample.jpg")
     labels = [Label.model_validate({
         "file": "sample.jpg", "is_food_photo": True,
-        "items": [{"name": "사과", "count": 2, "unit": "개"}],
+        "items": [{"name": "사과", "count": 2, "unit": "개", "priority_food": True}],
     })]
     output = tmp_path / "report.json"
     report = {"completed": False}
@@ -151,6 +151,11 @@ def test_runner_prepares_real_images_and_saves_scores_without_sending_labels(tmp
     assert saved["prompt_text"]
     assert saved["settings"]["image_detail"] == "low"
     assert saved["completion_passed"] is False
+    assert saved["management_policy"]["version"] == "glucose-recording-v1"
+    assert saved["management_policy"]["sha256"]
+    assert saved["management_policy"]["snapshot"]["groups"]
+    assert saved["metrics"]["priority_food_recall"]["rate"] == 1
+    assert saved["metrics"]["management_group_recall"]["rate"] is None
 
     with pytest.raises(FileExistsError):
         asyncio.run(run_evaluation(labels, tmp_path, {}, output, None))

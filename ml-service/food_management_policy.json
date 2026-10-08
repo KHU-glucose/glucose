@@ -1,0 +1,34 @@
+{
+  "version": "glucose-recording-v1",
+  "scope": "평가 전용 기록 분류. 혈당 반응·영양성분 전체·치료 적합성의 동등성을 뜻하지 않음.",
+  "groups": [
+    {
+      "id": "FISH_PLAIN_GRILLED_REFERENCE",
+      "names": ["갈치구이", "고등어구이"],
+      "parent_names": ["생선구이"],
+      "basis": "REFERENCE_COMPARISON",
+      "note": "사람이 일반 구이임을 확인한 라벨에서만 사용. 두 참고 음식 외 어종은 확장하지 않음. 생선구이는 부분 분류로만 인정.",
+      "nutrition_reference": {
+        "source_url": "https://www.foodsafetykorea.go.kr/upload/mkisna/2013.pdf",
+        "source_title": "식약처 외식 영양성분 자료집 제2권 (2013)",
+        "basis_g": 100,
+        "entries": [
+          {"name": "갈치구이", "printed_pages": "12-13", "carbohydrate_g": 0.1, "sugars_g": 0.1, "fat_g": 10.3, "protein_g": 24.8},
+          {"name": "고등어구이", "printed_pages": "14-15", "carbohydrate_g": 0.7, "sugars_g": 0.1, "fat_g": 18.9, "protein_g": 23.7}
+        ],
+        "limitation": "2013년 참고 요리 값. 조리법·중량·섭취량 차이와 지방·단백질 차이가 있어 동일 혈당 반응을 보장하지 않음. 수치를 API 추정값으로 반환하지 않음."
+      }
+    },
+    {"id": "FISH_SWEET_GLAZED", "names": ["달콤한 양념 생선구이", "데리야키 생선구이"], "parent_names": ["양념 생선구이"], "basis": "IDENTITY_ONLY", "note": "별도 조리법 기록. 설탕 함량은 이름만으로 수치화하지 않음."},
+    {"id": "FISH_BREADED_FRIED", "names": ["생선까스", "생선가스", "튀김옷 있는 생선튀김"], "parent_names": ["생선튀김"], "basis": "IDENTITY_ONLY", "note": "튀김옷 식별 그룹. 튀김옷 유무가 불명확한 생선튀김은 부분 분류."},
+    {"id": "WHITE_RICE", "names": ["흰쌀밥", "쌀밥"], "parent_names": ["밥"], "basis": "IDENTITY_ONLY", "note": "흰쌀밥 이름의 동의어만 포함. 잡곡밥·볶음밥과 영양 동등 처리하지 않음."},
+    {"id": "REGULAR_COLA", "names": ["일반 콜라", "설탕 함유 콜라"], "parent_names": ["콜라"], "basis": "IDENTITY_ONLY", "note": "제품 정보로 일반 제품임을 확인한 라벨에 사용. 무표시 콜라는 판단 불가."},
+    {"id": "ZERO_COLA", "names": ["제로 콜라", "무설탕 콜라"], "parent_names": ["콜라"], "basis": "IDENTITY_ONLY", "note": "읽히는 제품 표시가 있을 때만 사용. 모든 제로 제품의 영양 동등성이나 혈당 무영향을 뜻하지 않음."}
+  ],
+  "confusion_pairs": [
+    ["FISH_PLAIN_GRILLED_REFERENCE", "FISH_SWEET_GLAZED"],
+    ["FISH_PLAIN_GRILLED_REFERENCE", "FISH_BREADED_FRIED"],
+    ["FISH_SWEET_GLAZED", "FISH_BREADED_FRIED"],
+    ["REGULAR_COLA", "ZERO_COLA"]
+  ]
+}

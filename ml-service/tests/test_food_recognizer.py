@@ -80,3 +80,14 @@ def test_v3_remains_identical_to_its_first_evaluated_version():
     assert hashlib.sha256(get_food_prompt("examples-v3").encode()).hexdigest() == (
         "137628147f2a9200ce9d2d73fcb92c62de80d3bd7871b2872fc6e6938a3a2f14"
     )
+
+
+def test_glucose_candidate_is_opt_in_and_preserves_output_contract():
+    from food_prompts import ACTIVE_PROMPT_VERSION
+
+    assert ACTIVE_PROMPT_VERSION == "examples-v3"
+    assert get_food_prompt("glucose-v6").startswith(get_food_prompt("examples-v3"))
+    # Evaluation-only annotations must not become client/API output fields.
+    schema = FoodRecognitionPayload.model_json_schema()
+    assert "management_group" not in schema["$defs"]["FoodItem"]["properties"]
+    assert "priority_food" not in schema["$defs"]["FoodItem"]["properties"]

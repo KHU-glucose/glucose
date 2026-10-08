@@ -16,7 +16,6 @@ BASELINE_V1 = """
 - 칼로리, 탄수화물 g, 당류 g, 인슐린 용량, 치료 적합성은 추정하거나 반환하지 않습니다.
 """.strip()
 
-
 RULES_V2 = """
 # 목적
 사진 한 장에서 실제로 보이는 음식과 음료를 찾아 한국어 일반 음식명으로 기록합니다.
@@ -63,7 +62,6 @@ RULES_V2 = """
 - 칼로리, 탄수화물 g, 당류 g, 인슐린 용량, 치료 적합성은 추정하거나 반환하지 않습니다.
 """.strip()
 
-
 EXAMPLES_V3 = """
 당신은 한국어 음식 사진 인식기입니다. 사진에 보이는 근거로 음식과 음료를 구분하고,
 제공된 구조화 출력 스키마만 반환합니다. 사용자의 추가 입력은 필요하지 않습니다.
@@ -98,26 +96,45 @@ EXAMPLES_V3 = """
 - 불투명한 사탕 봉지 1개: 사탕, FAST_SUGAR, count=1, unit=팩. 봉지 속 낱개 수는 추정하지 않습니다.
 """.strip()
 
-
+# Each candidate changes only the name-selection paragraph relative to v3.
 V3_NAME_RULE = """- name은 한국어로 일상에서 쓰는 대표 요리명입니다. 브랜드나 임의의 원재료 나열을 이름으로 쓰지 않습니다.
   전체 형태와 조리 방식, 국물, 주재료를 함께 보고 가장 잘 맞는 요리명을 고릅니다.
   식별 근거가 부족한 세부 종류만 상위 이름으로 답하고 confidence를 낮춥니다."""
-
 
 FOCUSED_V4 = EXAMPLES_V3.replace(V3_NAME_RULE, """- name은 한국어의 일반적인 완성 요리명입니다. 보이는 재료 목록이나 임의의 조리 설명을 요리명 대신 쓰지 않습니다.
   전체 형태·표면 질감·조리 방식·국물·주재료가 함께 뒷받침하는 가장 구체적인 일반 요리명을 고릅니다.
   재료 하나가 눈에 띈다는 이유로 요리 전체를 그 재료 이름으로 바꾸지 않습니다.
   시각적으로 구분할 수 없는 세부 종류만 상위 이름으로 답하고 confidence를 낮춥니다.""")
 
-
 CONTRAST_V5 = EXAMPLES_V3.replace(V3_NAME_RULE, V3_NAME_RULE + """
   비슷한 요리가 혼동되면 사진에 실제로 있는 구별 단서(윤곽, 뼈·껍질, 표면 질감, 국물,
   면·곡물 모양)를 기준으로 선택합니다. 색 하나, 접시, 배경만으로 종류를 확정하지 않습니다.
   식별된 음식은 익숙한 대표 요리명으로 답하고, 없는 특징을 가정해 더 구체적인 이름을 붙이지 않습니다.""")
 
+GLUCOSE_V6 = EXAMPLES_V3 + """
 
-PROMPTS = {'baseline-v1': BASELINE_V1, 'rules-v2': RULES_V2, 'examples-v3': EXAMPLES_V3, 'focused-v4': FOCUSED_V4, 'contrast-v5': CONTRAST_V5}
-ACTIVE_PROMPT_VERSION = 'examples-v3'
+# 혈당 관리용 기록의 관찰 우선순위
+- 음식명 정확도를 유지하면서 밥·면·빵·간식·음료의 누락을 특히 점검합니다.
+  완성된 요리 안의 재료를 별도 음식으로 나누는 기존 금지 규칙은 그대로 지킵니다.
+- 사진으로 확인 가능한 구이·튀김·튀김옷·양념의 차이를 일반 음식명에 반영합니다.
+  어종을 구분할 근거가 부족하면 생선구이처럼 상위 이름과 낮은 confidence를 사용합니다.
+  영양이 비슷할 것 같다는 이유로 갈치를 고등어로 바꾸거나 이름을 일부러 뭉뚱그리지 않습니다.
+- 색·윤기·소스의 존재만으로 설탕, 당 함량, 달콤함을 확정하지 않습니다.
+  확인되지 않는 조리법·양념 성분·영양소는 추가하지 않습니다.
+- 무설탕·제로·일반 제품의 차이는 읽히는 포장 정보가 있을 때만 이름에 반영합니다.
+  용기 모양이나 음료 색만으로 무설탕 여부를 판단하지 않습니다. 제품명은 읽히는 범위만
+  packaged_product에 기록하고, 불명확한 세부 종류는 상위 이름과 낮은 confidence로 답합니다.
+  무설탕 표시를 탄수화물 없음이나 혈당 영향 없음의 근거로 사용하지 않습니다.
+- HIGH_CARB·FAST_SUGAR 태그는 기록용 힌트이며 당류 g나 혈당 반응의 측정값이 아닙니다.
+  FAST_SUGAR는 치료 적합성을 뜻하지 않습니다. 초콜릿 등의 지방 정보를 무시하지 않습니다.
+- 사진 속 수량은 실제 섭취량이 아닙니다. 기존 MEAL count=null 정책을 유지하며 무게·인분·
+  탄수화물 g·당류 g·예상 혈당 상승량·인슐린 용량을 추정하지 않습니다.
+""".rstrip()
+
+PROMPTS = {"baseline-v1": BASELINE_V1, "rules-v2": RULES_V2, "examples-v3": EXAMPLES_V3,
+           "focused-v4": FOCUSED_V4, "contrast-v5": CONTRAST_V5, "glucose-v6": GLUCOSE_V6}
+ACTIVE_PROMPT_VERSION = "examples-v3"
+# v4/v5/v6 remain experimental; v6 has no real-image performance evidence yet.
 
 
 def get_food_prompt(version: str) -> str:

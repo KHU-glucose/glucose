@@ -148,6 +148,28 @@ python ml-service/eval_food.py --prompt-version examples-v3 --limit 100 --split 
 자동 계측되지 않아 `completion_passed`는 완전한 완료 판정을 내릴 수 없습니다.
 결과가 좋은 10장만으로 최종 목표 달성을 주장하지 않습니다. 그래프 파싱 평가는 이 도구 범위 밖입니다.
 
+## 혈당 관리 중심 추가 평가 (2026-10-08)
+
+새 기준·그룹별 근거·라벨 작성법·실험 절차는 [혈당 관리 평가 기준](glucose-management-policy.md)을
+확인하세요. `labels.management.example.json`은 새 라벨 형식 예시이며 실제 평가 데이터가 아닙니다.
+
+기존 음식명/개수 점수는 그대로 유지하고, 사람이 미리 작성한 `management_group`,
+`priority_food`, `requires_uncertainty`로 별도의 기록 그룹·중요 음식 미식별·음식명 low 지표를
+계산합니다. 상위 이름은 부분 분류로만 기록하며 영양 동등이나 동일 혈당 반응으로 간주하지 않습니다.
+그룹 precision은 `management_annotation_complete=true`인 사진에서만 측정합니다.
+보고서에 정책 버전·해시·전체 스냅샷·사진별 혼동을 보존합니다. 새 필드가 없으면 새 정답 지표는 미측정입니다.
+
+`glucose-v6`는 실험용 프롬프트이고 운영 기본값은 `examples-v3`입니다.
+API 스키마·모델·detail·축소 크기·식사 count 정책은 바꾸지 않았습니다.
+
+```powershell
+python ml-service/eval_food.py --prompt-version glucose-v6 --check
+python ml-service/eval_food.py --prompt-version glucose-v6 --limit 100
+```
+
+두 번째 실행은 API 비용이 발생합니다. 새 그룹 지표는 기존 완료 목표를 대체하지 않으며
+목표치가 합의되지 않아 자동 PASS 판정에 넣지 않습니다. 실제 사진에서 개선됐다는 증거는 아직 없습니다.
+
 ## 사진 수집
 
 처음 10장은 식사 3장, 간식 2장, 사탕·초콜릿·주스 등 3장, 비음식 2장으로 시작하세요.
