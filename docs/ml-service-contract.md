@@ -90,6 +90,7 @@ ml-service (ml-service:8000, FastAPI)
   "items": [
     {
       "name": "초콜릿",
+      "food_group": "간식",
       "count": 3,
       "unit": "조각",
       "category_hint": "FAST_SUGAR",
@@ -99,6 +100,7 @@ ml-service (ml-service:8000, FastAPI)
     },
     {
       "name": "오렌지 주스",
+      "food_group": null,
       "count": 1,
       "unit": "팩",
       "category_hint": "FAST_SUGAR",
@@ -118,7 +120,8 @@ ml-service (ml-service:8000, FastAPI)
 |---|---|---|
 | `is_food_photo` | boolean | 음식·음료가 없는 사진이면 `false`, 이때 `items`는 빈 배열 |
 | `items[].name` | string | 한국어 일반 명칭 (예: 짜장면, 집밥, 사탕). `food_catalog` 매칭에 사용 |
-| `items[].count` | integer \| null | 낱개로 셈 수 있을 때만. 그릇 음식은 1, 셈 수 없으면 `null` |
+| `items[].food_group` | enum \| null | 표시용 대분류: `한식` `일식` `중식` `간식`. 그 외 음식·음료 또는 구분 근거가 부족하면 `null`. 기존 응답에 없던 필드는 읽을 때 `null`로 취급 |
+| `items[].count` | integer \| null | 식사류(`MEAL`)는 항상 `null`. 간식 낱개·음료 용기를 확실히 셀 수 있을 때만 정수, 불확실하면 `null` |
 | `items[].unit` | string | 개, 조각, 팩, 컵, 그릇, 공기, 병, 잔 중 하나 |
 | `items[].category_hint` | enum | `MEAL` `SNACK` `FAST_SUGAR` `DRINK` `ALCOHOL` |
 | `items[].tags` | enum[] | `HIGH_FAT` `HIGH_CARB` `FAST_SUGAR` (분석 창 길이 결정에 사용) |
@@ -129,6 +132,10 @@ ml-service (ml-service:8000, FastAPI)
 
 ### 규칙
 
+- 대분류는 음식별로 기록합니다. `name`에 접두사를 붙이지 않습니다. 화면에서는 `food_group`이 있으면 `한식 - 김치찌개`처럼 조합하고, `null`이면 음식명만 표시합니다.
+- 예: 김치찌개·김밥=`한식`, 초밥·라멘=`일식`, 짜장면·탕수육=`중식`. 과일·과자·빵·약과·낱개 사탕·초콜릿 등 간식은 나라보다 `간식` 분류를 우선합니다. 피자·파스타 등 네 범주 밖 음식과 음료·술은 `null`입니다. 모호한 볶음밥·생선구이 등을 배경이나 식기만으로 한식/일식/중식으로 확정하지 않습니다.
+- `food_group`은 표시용이며 기존 `category_hint` 및 개수 정책을 바꾸지 않습니다. 김밥·만두·튀김은 계속 `MEAL`, 식사류 `count=null`, 확실히 셀 수 있는 낱개 간식만 개수를 기록합니다. 사탕은 `food_group="간식"`이면서 `category_hint="FAST_SUGAR"`일 수 있습니다. 혈당 관리 그룹·영양 유사도와도 별개입니다.
+- 2026-10-08 변경: 이미지 `detail=low`, 대분류 프롬프트 `cuisine-v7`(v3 규칙 보존 + 대분류 추가) 추가. **운영 기본 프롬프트는 평가 전까지 `examples-v3` 유지**(Dave 결정, 비교 방법: `eval/food/snack-recognition-plan-2026-10-08.md` 4-1절). `food_group`은 선택 필드라 v3에서도 응답 형식은 같다. 기존 v1~v6와 과거 평가 결과는 보존하며, v7의 실제 사진 정확도·대분류 정확도는 아직 평가하지 않았습니다.
 - 저혈당 처치 여부는 **판단하지 않습니다.** 같은 사탕도 직전 혈당에 따라 달라서 백엔드가 판정합니다.
 - 칼로리·당류·탄수화물 숫자는 **돌려주지 않습니다.**
 - AI 출력은 구조화 출력(tool use / JSON schema)으로 강제하고, Pydantic 검증에 실패하면 내부에서 1회 재시도 후 502를 돌려줍니다.

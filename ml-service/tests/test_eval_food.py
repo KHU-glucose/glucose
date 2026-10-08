@@ -156,6 +156,9 @@ def test_runner_prepares_real_images_and_saves_scores_without_sending_labels(tmp
     assert saved["management_policy"]["snapshot"]["groups"]
     assert saved["metrics"]["priority_food_recall"]["rate"] == 1
     assert saved["metrics"]["management_group_recall"]["rate"] is None
+    assert saved["accuracy_summary"]["food_name"]["rate"] == 1
+    assert saved["accuracy_summary"]["glucose_management"]["status"] == "NOT_MEASURED"
+    assert saved["accuracy_summary"]["glucose_management"]["label_coverage"]["total"] == 1
 
     with pytest.raises(FileExistsError):
         asyncio.run(run_evaluation(labels, tmp_path, {}, output, None))

@@ -20,6 +20,7 @@ class FakeResponses:
                 items=[
                     FoodItem(
                         name="사과",
+                        food_group="간식",
                         count=1,
                         unit="개",
                         category_hint="SNACK",
@@ -42,6 +43,7 @@ def test_openai_recognizer_returns_contract_payload_and_usage():
     result = asyncio.run(recognizer.recognize(b"image", "image/jpeg", "SNACK"))
 
     assert result.payload.items[0].name == "사과"
+    assert result.payload.items[0].food_group == "간식"
     assert result.meta.model == "test-model"
     assert result.meta.input_tokens == 321
     assert result.meta.output_tokens == 45
@@ -49,6 +51,7 @@ def test_openai_recognizer_returns_contract_payload_and_usage():
     user_content = responses.calls[0]["input"][1]["content"]
     assert "SNACK" in user_content[0]["text"]
     assert user_content[1]["image_url"].startswith("data:image/jpeg;base64,")
+    assert user_content[1]["detail"] == "low"
 
 
 @pytest.mark.parametrize("version", list(PROMPTS))
@@ -85,12 +88,25 @@ def test_v3_remains_identical_to_its_first_evaluated_version():
 def test_glucose_candidate_is_opt_in_and_preserves_output_contract():
     from food_prompts import ACTIVE_PROMPT_VERSION
 
-    assert ACTIVE_PROMPT_VERSION == "examples-v3"
+    assert ACTIVE_PROMPT_VERSION != "glucose-v6"
     assert get_food_prompt("glucose-v6").startswith(get_food_prompt("examples-v3"))
     # Evaluation-only annotations must not become client/API output fields.
     schema = FoodRecognitionPayload.model_json_schema()
     assert "management_group" not in schema["$defs"]["FoodItem"]["properties"]
     assert "priority_food" not in schema["$defs"]["FoodItem"]["properties"]
+
+
+def test_cuisine_candidate_extends_v3_without_rewriting_existing_rules():
+    from food_prompts import ACTIVE_PROMPT_VERSION
+
+    # cuisine-v7은 실제 사진 평가 전까지 실험 후보다. 운영 기본값은 v3 (2026-10-08 Dave 결정).
+    assert ACTIVE_PROMPT_VERSION == "examples-v3"
+    assert get_food_prompt("cuisine-v7").startswith(get_food_prompt("examples-v3"))
+    recognizer = OpenAIFoodRecognizer(client=SimpleNamespace(responses=FakeResponses()), prompt_version="cuisine-v7")
+    assert recognizer.prompt == get_food_prompt("cuisine-v7")
+    for rule in ("food_group", "식기·배경·촬영 상황", "나라보다 간식 분류를 우선",
+                 "주스는 food_group=null", "김밥·만두·튀김은 계속 MEAL"):
+        assert rule in recognizer.prompt
 
 
 def test_default_model_is_an_existing_model_id(monkeypatch):

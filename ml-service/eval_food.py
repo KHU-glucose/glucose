@@ -13,6 +13,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt
 from food_prompts import ACTIVE_PROMPT_VERSION, PROMPTS, get_food_prompt
 from food_management import ManagementPolicy, load_management_policy, normalize_name, policy_evidence
+from food_family import FamilyPolicy, score_family_cases
 
 
 class ExpectedFood(BaseModel):
@@ -234,6 +235,89 @@ def score_cases(cases: list[dict], policy: ManagementPolicy | None = None) -> di
     return metrics
 
 
+def summarize_accuracy(cases: list[dict], metrics: dict | None = None,
+                       policy: ManagementPolicy | None = None,
+                       family_policy: FamilyPolicy | None = None) -> dict:
+    """Two independent recall-based scores; never an actual glucose-impact score.
+
+    Preserve original name matching and opt-in group matching. Unknown truth is
+    not inferred from names or model output, and annotation coverage is explicit.
+    """
+    policy = policy or load_management_policy()
+    metrics = metrics if metrics is not None else score_cases(cases, policy)
+    names = metrics["food_name_recall"]
+    groups = metrics["management_group_recall"]
+    all_food_complete = bool(cases) and all(
+        case["expected"].get("annotation_complete", False) for case in cases)
+    return {
+        "version": "two-axis-v2-family-gate",
+        "food_name": {
+            **names,
+            "label": "음식명 정확도 (정답 음식 식별률)",
+            "metric": "food_name_recall",
+            "status": "NOT_MEASURED" if names["rate"] is None else "MEASURED",
+            "scope": "사전 음식명·동의어 기준 일대일 일치. 실제 작성된 정답 음식만 분모에 포함.",
+            "all_food_annotations_complete": all_food_complete,
+            "precision": dict(metrics["food_name_precision"]) if all_food_complete else fraction(0, 0),
+            "f1": metrics["food_name_f1"] if all_food_complete else None,
+        },
+        "glucose_management": {
+            **groups,
+            "label": "혈당 관리용 특성 정확도 (정답 기록 그룹 식별률)",
+            "metric": "management_group_recall",
+            "status": "NOT_MEASURED" if groups["rate"] is None else "MEASURED_LABELLED_SUBSET",
+            "scope": "사전에 검수한 management_group 정답만 채점. 같은 계열이라는 이유로 자동 인정하지 않음.",
+            "policy_version": policy.version,
+            "label_coverage": fraction(groups["total"], names["total"]),
+            "unlabelled_food_items": names["total"] - groups["total"],
+            "labelled_images": sum(any(item.get("management_group") is not None
+                for item in case["expected"]["items"]) for case in cases),
+            "fully_annotated_images": sum(bool(case["expected"].get("management_annotation_complete"))
+                for case in cases),
+            "precision": dict(metrics["management_group_precision"]),
+            "precision_scope": "사진 전체 음식·그룹 정답이 완비된 사진만. recall과 분모 범위가 다를 수 있음.",
+            "parent_only": dict(metrics["management_parent_only_rate"]),
+            "important_confusions": dict(metrics["management_confusion_rate"]),
+            "unresolved_predictions": dict(metrics["management_unresolved_prediction_rate"]),
+            "clinical_glucose_prediction": False,
+        },
+        "family_gated_nutrition": score_family_cases(cases, family_policy),
+        "note": "두 점수는 서로 대체·평균하지 않음. API 실패·누락도 해당 정답 분모에 포함. "
+                "그룹 정답 없는 항목은 미측정이며 커버리지로 공개. 실제 혈당 영향·영양 동등성 검증이 아님.",
+    }
+
+
+def print_accuracy_summary(summary: dict) -> None:
+    for key in ("food_name", "glucose_management"):
+        score = summary[key]
+        value = ("미측정 (정답 없음)" if score["rate"] is None else
+                 f"{score['rate'] * 100:.1f}% ({score['correct']}/{score['total']})")
+        print(f"{score['label']}: {value}")
+    coverage = summary["glucose_management"]["label_coverage"]
+    value = ("평가할 정답 음식 없음" if coverage["rate"] is None else
+             f"{coverage['rate'] * 100:.1f}% ({coverage['correct']}/{coverage['total']}개 음식)")
+    print(f"혈당 관리 그룹 정답 커버리지: {value}")
+    print("두 점수는 별도 지표입니다. 그룹 점수는 실제 혈당 영향의 정확도가 아닙니다.")
+    if "family_gated_nutrition" in summary:
+        family = summary["family_gated_nutrition"]["food_family"]
+        value = ("미측정 (등록 계열 정답 없음)" if family["rate"] is None else
+                 f"{family['rate'] * 100:.1f}% ({family['correct']}/{family['total']})")
+        print(f"{family['label']}: {value}")
+        coverage = family["label_coverage"]
+        print(f"계열 명칭 표 커버리지: {coverage['correct']}/{coverage['total']}개 정답 음식")
+        nutrition = summary["family_gated_nutrition"]["within_family_nutrition"]
+        print(f"동일 계열 영양 비교: {nutrition['compared_pairs']}/{nutrition['same_family_matches']}개 계열 일치")
+        for field, label in [("carbohydrate_g", "탄수화물"), ("sugars_g", "당류")]:
+            error = nutrition["nutrient_errors"][field]["mean_absolute_difference_g_per_100g"]
+            print(f"{label} 참고값 평균 절대 차이: " + ("미측정" if error is None else f"{error:g} g/100g"))
+        print(f"음식명이 다른 동일 계열 중 영양 비교 완료: {nutrition['name_changed_compared_pairs']}쌍")
+        for field, label in [("carbohydrate_g", "탄수화물"), ("sugars_g", "당류")]:
+            error = nutrition["name_changed_nutrient_errors"][field]["mean_absolute_difference_g_per_100g"]
+            print(f"음식명 변경 쌍의 {label} 참고값 평균 절대 차이: " +
+                  ("미측정" if error is None else f"{error:g} g/100g"))
+        print("계열이 같아도 영양 동등 정답은 아닙니다. 실제 혈당 영향의 정확도가 아닙니다.")
+
+
 def assess_targets(metrics: dict) -> dict:
     """Per-run observations, not a completion claim or pure schema-validation metric."""
     targets = {}
@@ -347,6 +431,7 @@ async def run_evaluation(labels: list[Label], images_root: Path, report: dict, o
 
     def save_report():
         report["metrics"] = score_cases(report["cases"], policy)
+        report["accuracy_summary"] = summarize_accuracy(report["cases"], report["metrics"], policy)
         report["targets"] = assess_targets(report["metrics"])
         report["dataset_readiness"] = assess_dataset(report["cases"], report.get("split", "development"))
         report["completion_passed"] = (report.get("completed", False) and report["dataset_readiness"]["ready"]
@@ -416,8 +501,8 @@ def main():
             "note": "API 실패도 정확도 분모에 포함. 재시도 비용은 SDK 메타에 모두 포함되지 않을 수 있음.",
         }
         asyncio.run(run_evaluation(selected, args.images, report, output, args.model, args.prompt_version, policy))
+        print_accuracy_summary(report["accuracy_summary"])
         titles = {
-            "food_name_recall": "정답 음식 인식률",
             "food_name_precision": "AI 음식명 정밀도",
             "count_and_unit_accuracy": "개수·단위 일치율",
             "snack_count_and_unit_accuracy": "간식 낱개 개수·단위 일치율",
@@ -426,7 +511,6 @@ def main():
             "nonfood_rejection_rate": "비음식 사진 거르기",
             "category_hint_accuracy": "음식 분류 일치율",
             "successful_response_rate": "정상 응답률",
-            "management_group_recall": "혈당 관리용 기록 그룹 일치율 (별도 실험 지표)",
             "management_group_precision": "기록 그룹 정밀도 (그룹 정답 완비 사진만)",
             "management_parent_only_rate": "상위 이름만 식별한 비율 (완전 정답 아님)",
             "management_confusion_rate": "사전에 지정한 중요 그룹 혼동 비율",
@@ -435,6 +519,9 @@ def main():
             "uncertainty_low_confidence_recall": "불확실성 표시 일치율 (음식명 low의 대리 지표)",
         }
         for key, title in titles.items():
+            if key == "food_name_precision" and not report["accuracy_summary"]["food_name"]["all_food_annotations_complete"]:
+                print(f"{title}: 미측정 (사진 전체 음식 정답 미완비)")
+                continue
             metric = report["metrics"][key]
             if metric["rate"] is None:
                 print(f"{title}: 평가 대상 없음")

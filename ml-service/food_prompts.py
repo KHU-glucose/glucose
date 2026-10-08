@@ -131,10 +131,40 @@ GLUCOSE_V6 = EXAMPLES_V3 + """
   탄수화물 g·당류 g·예상 혈당 상승량·인슐린 용량을 추정하지 않습니다.
 """.rstrip()
 
+CUISINE_V7 = EXAMPLES_V3 + """
+
+# 표시용 음식 대분류 (기존 분류·개수 규칙 유지)
+- 각 items[]의 food_group은 한식, 일식, 중식, 간식 중 하나 또는 null입니다.
+  음식별로 지정하며 사진 전체에 같은 분류를 강요하지 않습니다. name에는 음식명만 쓰고
+  '한식 - 김치찌개' 같은 접두사를 넣지 않습니다. 대분류 때문에 음식명을 바꾸지 않습니다.
+- 김치찌개·김밥·비빔밥은 한식, 초밥·라멘은 일식, 짜장면·탕수육은 중식입니다.
+  음식의 식별 근거와 한국에서 통용되는 요리 분류를 사용하며 식기·배경·촬영 상황으로
+  나라를 추정하지 않습니다. 볶음밥·만두·생선구이처럼 여러 계열에 있는 요리를
+  구체적으로 구분할 근거가 없으면 food_group=null입니다.
+- 과일·과자·쿠키·빵·약과·사탕·초콜릿·젤리·포도당 제품 등 먹는 간식은
+  나라보다 간식 분류를 우선합니다. 음료·술은 간식에 포함하지 않습니다.
+  피자·파스타 등 네 범주 밖 음식, 음료·술, 분류가 불확실한 항목은 null입니다.
+- food_group은 표시용이며 category_hint, count, unit, tags의 기존 규칙과 독립적입니다.
+  김밥·만두·튀김은 계속 MEAL이며 count=null입니다. 사탕·초콜릿은 food_group=간식이어도
+  category_hint=FAST_SUGAR를 유지합니다. 주스는 food_group=null, category_hint=FAST_SUGAR입니다.
+  대분류로 영양성분, 당류, 혈당 영향, 저혈당 치료 적합성을 판단하지 않습니다.
+
+대분류 예시 (음식명 식별 근거가 있을 때):
+- 김치찌개: name=김치찌개, food_group=한식, category_hint=MEAL, count=null.
+- 초밥: name=초밥, food_group=일식, category_hint=MEAL, count=null.
+- 짜장면: name=짜장면, food_group=중식, category_hint=MEAL, count=null.
+- 온전한 쿠키 3개가 각각 완전히 보임: name=쿠키, food_group=간식, category_hint=SNACK, count=3, unit=개.
+- 약과: name=약과, food_group=간식. 기존 category_hint·낱개 개수 규칙을 적용합니다.
+- 피자: name=피자, food_group=null, category_hint=MEAL, count=null.
+""".rstrip()
+
 PROMPTS = {"baseline-v1": BASELINE_V1, "rules-v2": RULES_V2, "examples-v3": EXAMPLES_V3,
-           "focused-v4": FOCUSED_V4, "contrast-v5": CONTRAST_V5, "glucose-v6": GLUCOSE_V6}
+           "focused-v4": FOCUSED_V4, "contrast-v5": CONTRAST_V5, "glucose-v6": GLUCOSE_V6,
+           "cuisine-v7": CUISINE_V7}
+# cuisine-v7은 실제 사진 평가 전까지 실험 후보. 기존 100장으로 v3와 비교 후 전환한다(2026-10-08 Dave 결정).
 ACTIVE_PROMPT_VERSION = "examples-v3"
 # v4/v5/v6 remain experimental; v6 has no real-image performance evidence yet.
+# v7 adds display groups at the user's request; real-image accuracy is not measured yet.
 
 
 def get_food_prompt(version: str) -> str:

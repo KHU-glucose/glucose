@@ -1,0 +1,21 @@
+{
+  "version": "food-family-v1",
+  "scope": "사용자 합의의 계열 우선 평가를 위한 초기 명칭 표. 대표 클래스 정답 기반 진단이며 전체 음식 계열 표가 아님. 같은 계열은 영양 동등성·혈당 동등성을 뜻하지 않음.",
+  "families": [
+    {"id": "TTEOKBOKKI", "names": ["떡볶이", "치즈떡볶이"], "note": "같은 떡볶이 계열. 치즈 유무는 별도 영양 자료로 비교하며 동일 음식명 정답으로 합치지 않음."},
+    {"id": "GIMBAP", "names": ["김밥", "참치김밥"], "note": "김밥 계열만 연결. 속재료와 조리법 차이를 영양 동등 처리하지 않음."},
+    {"id": "STEAMED_EGG", "names": ["계란찜"], "note": "죽과 분리. 원본 라벨이 의심되면 사진 정답 검수가 먼저임."},
+    {"id": "PORRIDGE", "names": ["죽", "야채죽", "채소죽"], "note": "죽 계열. 포괄 이름 죽의 영양값을 특정 조리법 값으로 대신 채우지 않음."},
+    {"id": "PLAIN_GRILLED_FISH", "names": ["갈치구이", "고등어구이", "연어구이", "생선구이"], "note": "일반 생선구이 계열. 달콤한 양념·튀김옷·정식·밥 포함 복합 명칭은 등록하지 않음. 미확정 어종 생선구이에는 특정 어종 수치를 쓰지 않음."}
+  ],
+  "nutrition": [
+    {"name": "갈치구이", "basis_g": 100, "carbohydrate_g": 0.1, "sugars_g": 0.1,
+     "source_url": "https://www.foodsafetykorea.go.kr/upload/mkisna/2013.pdf",
+     "source_title": "식약처 외식 영양성분 자료집 제2권 (2013)", "source_locator": "인쇄 쪽 12-13",
+     "review_status": "VERIFIED", "limitation": "기존 management 정책에서 확인한 참고 요리 값 재사용. 실제 사진의 조리법·섭취량 또는 평균 혈당 반응을 나타내지 않음."},
+    {"name": "고등어구이", "basis_g": 100, "carbohydrate_g": 0.7, "sugars_g": 0.1,
+     "source_url": "https://www.foodsafetykorea.go.kr/upload/mkisna/2013.pdf",
+     "source_title": "식약처 외식 영양성분 자료집 제2권 (2013)", "source_locator": "인쇄 쪽 14-15",
+     "review_status": "VERIFIED", "limitation": "기존 management 정책에서 확인한 참고 요리 값 재사용. 실제 사진의 조리법·섭취량 또는 평균 혈당 반응을 나타내지 않음."}
+  ]
+}

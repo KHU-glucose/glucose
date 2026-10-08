@@ -152,11 +152,13 @@ R2(S3 호환) presigned PUT URL을 발급한다. **앱이 이 URL로 R2에 직�
 {
   "is_food_photo": true,
   "items": [
-    { "name": "초콜릿", "count": 3, "unit": "조각", "category_hint": "FAST_SUGAR", "tags": ["HIGH_FAT"], "confidence": "high" }
+    { "name": "초콜릿", "food_group": "간식", "count": 3, "unit": "조각", "category_hint": "FAST_SUGAR", "tags": ["HIGH_FAT"], "confidence": "high" }
   ],
   "likely_consumed_all": true
 }
 ```
+
+`food_group`은 `한식` / `일식` / `중식` / `간식` 또는 `null`인 표시용 대분류다. 과거 인식 결과에 필드가 없으면 `null`로 반환한다. `name`은 음식명 그대로 유지하며 화면에서만 `한식 - 김치찌개`처럼 조합한다. 기존 `category_hint`·개수·당류 계산과 별개이며, intake 저장 필드는 이번 변경에 포함하지 않는다.
 
 이 결과를 사용자가 확인·수정한 뒤 `POST /v1/intakes`로 최종 확정한다 (AI 값은 제안일 뿐, 수정값이 우선).
 
