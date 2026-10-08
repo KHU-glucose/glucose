@@ -8,6 +8,7 @@ import SwiftUI
 struct HomeView: View {
     @State private var showPhotoCapture = false
     @State private var showInsulinForm = false
+    @State private var showGraphUpload = false
 
     var body: some View {
         NavigationStack {
@@ -36,6 +37,17 @@ struct HomeView: View {
                 .buttonStyle(.bordered)
                 .padding(.horizontal)
 
+                Button {
+                    showGraphUpload = true
+                } label: {
+                    Label("혈당 그래프 올리기", systemImage: "chart.xyaxis.line")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                }
+                .buttonStyle(.bordered)
+                .padding(.horizontal)
+
                 Spacer()
             }
             .navigationTitle("홈")
@@ -44,6 +56,9 @@ struct HomeView: View {
             }
             .sheet(isPresented: $showInsulinForm) {
                 InsulinRecordFormView(onSaved: {})
+            }
+            .sheet(isPresented: $showGraphUpload) {
+                GraphUploadView()
             }
         }
     }
