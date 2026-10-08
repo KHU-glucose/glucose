@@ -11,6 +11,7 @@ struct PhotoCaptureView: View {
     @State private var uploadViewModel = PhotoUploadViewModel()
     @State private var showCamera = false
     @State private var photosPickerItem: PhotosPickerItem?
+    @State private var showRecognitionResult = false
     @Environment(\.dismiss) private var dismiss
 
     private var isCameraAvailable: Bool {
@@ -87,7 +88,19 @@ struct PhotoCaptureView: View {
                 .ignoresSafeArea()
             }
             .onChange(of: photosPickerItem) { _, newItem in
-                Task { await viewModel.loadFromPicker(newItem) }
+                Task { await loadPickedImage(newItem) }
+            }
+            .onChange(of: uploadViewModel.state) { _, newState in
+                if newState == .done {
+                    showRecognitionResult = true
+                }
+            }
+            .navigationDestination(isPresented: $showRecognitionResult) {
+                if let photoId = uploadViewModel.photoId {
+                    RecognitionResultView(photoId: photoId, context: viewModel.context) {
+                        dismiss()
+                    }
+                }
             }
             .interactiveDismissDisabled(isUploadInFlight)
         }
@@ -122,13 +135,8 @@ struct PhotoCaptureView: View {
         case .completing:
             Label("마무리하는 중...", systemImage: "checkmark.icloud")
         case .done:
-            Label("업로드 완료", systemImage: "checkmark.circle.fill")
+            Label("업로드 완료 · 인식 결과로 이동", systemImage: "checkmark.circle.fill")
                 .foregroundStyle(.green)
-                .onAppear {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                        dismiss()
-                    }
-                }
         }
     }
 
@@ -137,6 +145,19 @@ struct PhotoCaptureView: View {
             return "다시 시도"
         }
         return "업로드"
+    }
+
+    private func loadPickedImage(_ item: PhotosPickerItem?) async {
+        guard let item else { return }
+        do {
+            guard let data = try await item.loadTransferable(type: Data.self), let image = UIImage(data: data) else {
+                viewModel.setError("사진을 불러오지 못했습니다.")
+                return
+            }
+            viewModel.process(image)
+        } catch {
+            viewModel.setError("사진을 불러오지 못했습니다.")
+        }
     }
 
     private func startUpload() {

@@ -8,9 +8,9 @@ AI는 "무엇을 몇 개 먹었는지"까지만 인식한다. 당류·처치 판
 ## 저장소 구조 (모노레포)
 ```
 backend/      Spring Boot 3.5, Java 21, Gradle  ← Dave 담당
-ml-service/   FastAPI(Python 3.12)               ← 팀원 담당 (현재 /health만 있는 임시 서비스)
+ml-service/   FastAPI(Python 3.12)               ← 팀원 담당 (음식 인식: OpenAI Vision, 그래프 파싱: OpenCV+OCR)
 jaehyun/      팀원의 독립 프로토타입 (계약과 다름: 영양 수치 반환. 팀원 허락 후 삭제 예정, 그 전엔 건드리지 않음)
-ios/          SwiftUI 앱 (I0/I1 완료: 뼈대 + 기록 Mock 화면)
+ios/          SwiftUI 앱 (iOS 17+, Bundle ID com.glubee.glubee)
 .github/workflows/deploy.yml   main push → test → build(amd64) → GHCR → SSH 배포
 docs/ml-service-contract.md    ml-service API 계약서 (정답 문서)
 AI_use_organize/               경진대회 제출용 AI 활용 기록 (건드리지 말 것)
@@ -51,11 +51,12 @@ AI_use_organize/               경진대회 제출용 AI 활용 기록 (건드�
 - 이 저장소가 공개 상태일 수 있으니 서버 IP, 도메인, 키를 코드·문서에 쓰지 않는다.
 
 ## 현재 상태와 다음 할 일
-- 백엔드 완료(머지): A1, B0(`docs/backend-api.md`), B1(Sign in with Apple + JWT), B2(사진 업로드 R2 presigned URL), B3(job 워커 + ml-service 연동, 업로드 완료→음식 인식 job 자동 적재), B4(intake/insulin_event CRUD, `food_catalog` 시드, `GET /v1/photos/{id}/recognition`). ml-service PR(실제 음식 인식 + 그래프 파서)도 머지됨.
-- iOS 완료(머지): I0(뼈대, 탭 4개), I1(기록 목록·상세 + Mock Repository), I2(Sign in with Apple, 실기기 로그인 확인됨).
-- 진행: **상세 작업 순서는 `docs/backend-plan.md`**(백엔드), `ios-plan.md`(iOS, Downloads에 있던 원본). iOS는 I3~I7이 순서대로 PR 쌓여 있음(#15~#19, Dave 실기기 검증 대기). 백엔드는 B5(혈당 그래프, PR #21)→B6(에피소드/반동 판정, PR #22)→B7(일일·주간 리포트, `GET /v1/reports/daily/{date}`·`GET /v1/reports/weekly/{date}`, PR 예정)까지 스택으로 구현 완료, 테스트 75개 통과. ml-service 음식 인식 기본 모델명 버그(`gpt-6-luna`→`luna`) 수정 PR #20도 올라간 상태.
+- 백엔드 완료(머지): A1, B0(`docs/backend-api.md`), B1(Sign in with Apple + JWT), B2(사진 업로드 R2 presigned URL), B3(job 워커 + ml-service 연동), B4(intake/insulin_event CRUD, `food_catalog` 시드, 음식 인식 결과 조회), B5(혈당 그래프 업로드·분석), B6(에피소드/반동 판정 `EpisodeAnalyzer`), B7(일일·주간 리포트). ml-service 실제 음식 인식 + 그래프 파서, 모델명 버그 수정(#20)도 머지됨.
+- iOS 완료(머지): I0(뼈대), I1(기록 화면), I2(Sign in with Apple), I3(사진 촬영), I4(R2 업로드), I5(인식 결과 확인·수정), I6(인슐린 기록), I7(기록 목록 Live 전환).
+- 진행: **상세 작업 순서는 `docs/backend-plan.md`**(백엔드), `ios-plan.md`(iOS, Downloads에 있던 원본). 다음은 iOS Phase 4(I8 그래프 업로드 → I9 일일 리포트 → I10 주간 리포트).
+- **스택 PR 주의**: 아래 PR을 위 PR의 브랜치를 base로 쌓으면, 위 PR이 main에 머지된 뒤 아래 PR의 base를 main으로 바꾸지 않고 머지했을 때 main에 안 들어간다(#17~#19, #22~#23에서 실제로 발생 → landing PR로 복구). 저장소 설정 "Automatically delete head branches"를 켜면 GitHub가 자동으로 base를 옮겨준다.
 - Bundle ID는 `com.glubee.glubee`로 확정(앱 실제 이름 Glubee). `com.glucose.glucose`는 쓰지 않음 — 저장소/패키지명(`com.glucoselog`)은 그대로 유지.
-- 다음: 백엔드는 B8(레이트 리밋/OpenAPI/로그 점검/백업 복구 테스트, 병행 가능), iOS는 I7 다음 Phase 4(I8 그래프 업로드).
+- 다음: 백엔드는 B8(레이트 리밋/OpenAPI/로그 점검/백업 복구 테스트, 병행 가능).
 - 비용: AWS 크레딧(Free Tier)으로 Lightsail $12/월 차감 예정. 크레딧 소진 시점 확인 필요.
 - 결정됨: 그래프 재업로드는 **덮어쓰기**. 반동 판정은 **그래프의 ABOVE_RANGE 플래그 재사용**(새 숫자 임계값을 코드에 고정하지 않음, 사용자별 목표범위 자동 반영). 리포트 문장(AI 요약)은 **지금은 안 만듦** — 숫자/건수만 반환(ml-service에 리포트용 엔드포인트가 없어서, 필요해지면 계약 문서부터 고치고 팀원과 협의).
 - 미결정: 저장소 공개 여부(경진대회 요건 확인 후 private 전환 검토 — 지금은 public 유지), 그래프 파서 담당 범위/진행 상황(현재는 팀원이 실제 OpenCV+OCR 구현 완료).
