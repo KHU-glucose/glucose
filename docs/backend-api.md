@@ -245,7 +245,9 @@ R2(S3 호환) presigned PUT URL을 발급한다. **앱이 이 URL로 R2에 직�
 | `GLUCOSE_GRAPH_NOT_FOUND` | 404 | 그래프 업로드 없음/본인 소유 아님 |
 | `GLUCOSE_GRAPH_NOT_UPLOADED` | 409 | R2 업로드 전에 완료 통보함 |
 | `GRAPH_NOT_READY` | 409 | 그래프 분석 job이 아직 대기/처리 중 |
-| `GRAPH_PARSE_FAILED` | 422 | 그래프 인식 실패(격자·눈금·날짜 인식 불가, 데이터 10% 미만 등) |
+| `GRAPH_NOT_RECOGNIZED` | 422 | 리브레 일일 그래프로 인식 못 함(격자·눈금·날짜를 못 찾음) — "지원하지 않는 이미지" 안내 |
+| `GRAPH_TOO_LITTLE_DATA` | 422 | 그래프는 맞지만 곡선이 하루의 10% 미만 — "데이터가 너무 적어요" 안내 |
+| `GRAPH_PARSE_FAILED` | 422 | 그 밖의 그래프 분석 실패(이미지 오류, 재시도 소진 등) |
 | `GLUCOSE_DAY_NOT_FOUND` | 404 | 해당 날짜의 혈당 데이터 없음 |
 
 이후 단계(리포트)에서 추가되는 코드는 해당 PR에서 이 표에 이어 추가한다.
@@ -267,7 +269,8 @@ R2에 실제로 올라왔는지 확인한 뒤 그래프 분석을 백그라운�
 응답: `204 No Content`
 
 ### `GET /v1/glucose-graphs/{uploadId}` — 분석 상태 조회
-분석 중이면 409 `GRAPH_NOT_READY`, 실패했으면 422 `GRAPH_PARSE_FAILED`.
+분석 중이면 409 `GRAPH_NOT_READY`. 실패했으면 422 — 원인별로 `GRAPH_NOT_RECOGNIZED`(지원하지 않는 이미지),
+`GRAPH_TOO_LITTLE_DATA`(데이터 부족), 그 외 `GRAPH_PARSE_FAILED`.
 완료되면 200: `{ "date": "2026-10-01", "coverage_ratio": 0.94 }`
 
 ### `GET /v1/glucose-readings/{date}` — 날짜별 혈당 시계열 조회

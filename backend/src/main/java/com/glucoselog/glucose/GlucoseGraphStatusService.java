@@ -37,10 +37,23 @@ public class GlucoseGraphStatusService {
         return switch (job.getStatus()) {
             case PENDING, PROCESSING ->
                 throw new ApiException(HttpStatus.CONFLICT, "GRAPH_NOT_READY", "아직 분석 중입니다");
-            case FAILED ->
-                throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, "GRAPH_PARSE_FAILED", "그래프를 읽을 수 없습니다");
+            case FAILED -> throw failureFor(job.getLastError());
             case DONE -> parse(job.getResult());
         };
+    }
+
+    // MlServiceClient가 4xx 응답 본문({code, message, request_id})을 lastError에 그대로 남기므로,
+    // 계약서의 두 코드만 찾아서 앱이 원인별로 다른 안내를 보여줄 수 있게 한다.
+    private static ApiException failureFor(String lastError) {
+        if (lastError != null && lastError.contains("GRAPH_NOT_RECOGNIZED")) {
+            return new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, "GRAPH_NOT_RECOGNIZED",
+                    "리브레 일일 그래프로 인식하지 못했습니다");
+        }
+        if (lastError != null && lastError.contains("TOO_LITTLE_DATA")) {
+            return new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, "GRAPH_TOO_LITTLE_DATA",
+                    "그래프에 혈당 데이터가 너무 적습니다");
+        }
+        return new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, "GRAPH_PARSE_FAILED", "그래프를 읽을 수 없습니다");
     }
 
     private GlucoseGraphStatusResponse parse(String rawJson) {
