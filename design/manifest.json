@@ -102,16 +102,40 @@
     "sha256": "239968e0e5875e5f344e2ef8723afbe03f5174dbdf8dc1d446c8575ae1f67613"
   },
   {
+    "originalName": "기준화면-인바디-보수계-2026-10-08.md",
+    "path": "design/figma/기준화면-인바디-보수계-2026-10-08.md",
+    "bytes": 1520,
+    "sha256": "cb3762a4cc7e1577d845a38f80eca72df66bdda4e01a29337900c4c3571870fa"
+  },
+  {
+    "originalName": "번호-기호-단위-재검토-2026-10-08.md",
+    "path": "design/figma/번호-기호-단위-재검토-2026-10-08.md",
+    "bytes": 2325,
+    "sha256": "ae3ec94353503311d789c070f056897d4cffd353867a6038e74b1f150abb0694"
+  },
+  {
     "originalName": "수정내역-2026-10-07.md",
     "path": "design/figma/수정내역-2026-10-07.md",
     "bytes": 17870,
     "sha256": "96d540bebcfc82dbc3110fe2ad16c36790440df1172fbf84ad0ec50a93fef720"
   },
   {
+    "originalName": "전체-스타일-확대-2026-10-08.md",
+    "path": "design/figma/전체-스타일-확대-2026-10-08.md",
+    "bytes": 2358,
+    "sha256": "f0d618eb7bdd7c9c93ff6a21be5e45c441c6ed81b326a5412b1f49480368a1c1"
+  },
+  {
+    "originalName": "주간리포트-사용자화면-2026-10-08.md",
+    "path": "design/figma/주간리포트-사용자화면-2026-10-08.md",
+    "bytes": 4125,
+    "sha256": "82bb7aaf380da5d737dde3da1532b9f2f5d189a73bd84689433f76e346fad448"
+  },
+  {
     "originalName": "팀원-사용안내.md",
     "path": "design/figma/팀원-사용안내.md",
-    "bytes": 1758,
-    "sha256": "3707b71158988d518dadf775b885d9fb913b06ff75b0c5fc5760e06de0043ff9"
+    "bytes": 2069,
+    "sha256": "022adfb921d9147d62ff5c947c0183addea3cb38a3de0d2754361ed983614efe"
   },
   {
     "originalName": "파일정리-2026-10-07.md",
@@ -122,8 +146,8 @@
   {
     "originalName": "screen-index.json",
     "path": "design/figma/screen-index.json",
-    "bytes": 13644,
-    "sha256": "7206a79233b92d123627427358746f7dabc1bfcf17448385fd9413fdafdda197"
+    "bytes": 13742,
+    "sha256": "b218bd370c956349f8bb76f096c9d54820d2a69877f8bc42fd500e21a656e20b"
   },
   {
     "originalName": "2.png",
@@ -158,7 +182,7 @@
   {
     "originalName": "README.md",
     "path": "design/README.md",
-    "bytes": 1906,
-    "sha256": "07b1716accdecf600c839a3220f4c31778c0d99b547f45cc5a501c1e0d7f0790"
+    "bytes": 2035,
+    "sha256": "d957459dc0c34f300d4f955fc1c27c61e9eb3a41875d3fff12ff49dc3d9307af"
   }
 ]

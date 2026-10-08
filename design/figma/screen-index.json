@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-07",
+  "updatedAt": "2026-10-08",
   "source": "Figma live file",
   "fileKey": "NwWXuSOlgRyfongR48IfhG",
   "scope": "UI design",
@@ -14,7 +14,7 @@
           "section": "01 · 음식 기록",
           "name": "home",
           "width": 390,
-          "height": 1108,
+          "height": 1104,
           "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=62-455"
         },
         {
@@ -32,7 +32,7 @@
           "section": "01 · 음식 기록",
           "name": "food",
           "width": 390,
-          "height": 1055,
+          "height": 1051,
           "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=64-668"
         },
         {
@@ -50,7 +50,7 @@
           "section": "02 · 투여와 혈당 공유",
           "name": "insulin",
           "width": 390,
-          "height": 1058,
+          "height": 1041,
           "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=64-744"
         },
         {
@@ -59,7 +59,7 @@
           "section": "02 · 투여와 혈당 공유",
           "name": "wrapup",
           "width": 390,
-          "height": 1138,
+          "height": 1127,
           "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=89-643"
         },
         {
@@ -86,7 +86,7 @@
           "section": "03 · 리브레 공유 안내",
           "name": "guide-1",
           "width": 389.9584045410156,
-          "height": 914,
+          "height": 880,
           "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=87-342"
         },
         {
@@ -95,7 +95,7 @@
           "section": "03 · 리브레 공유 안내",
           "name": "guide-2",
           "width": 389.9584045410156,
-          "height": 976,
+          "height": 974,
           "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=87-400"
         },
         {
@@ -104,7 +104,7 @@
           "section": "03 · 리브레 공유 안내",
           "name": "guide-3",
           "width": 390.1328125,
-          "height": 952,
+          "height": 916,
           "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=87-460"
         },
         {
@@ -122,7 +122,7 @@
           "section": "04 · 리포트와 대응 리뷰",
           "name": "weekly",
           "width": 390,
-          "height": 3235.5087890625,
+          "height": 3273.661865234375,
           "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=65-1674"
         },
         {
@@ -131,7 +131,7 @@
           "section": "04 · 리포트와 대응 리뷰",
           "name": "review-low",
           "width": 390,
-          "height": 2153.978271484375,
+          "height": 2183.978271484375,
           "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=64-1117"
         },
         {
@@ -140,7 +140,7 @@
           "section": "04 · 리포트와 대응 리뷰",
           "name": "review-high",
           "width": 390,
-          "height": 2025.978271484375,
+          "height": 2049.978271484375,
           "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=64-1231"
         },
         {
@@ -149,7 +149,7 @@
           "section": "05 · 기록 연결과 다음 행동",
           "name": "response-detail",
           "width": 390,
-          "height": 1118,
+          "height": 1074,
           "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=89-724"
         },
         {
@@ -218,7 +218,7 @@
           "section": "02 · 건강 프로필과 확인",
           "name": "setup-condition",
           "width": 390,
-          "height": 1206,
+          "height": 1193,
           "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-567"
         },
         {
@@ -227,7 +227,7 @@
           "section": "02 · 건강 프로필과 확인",
           "name": "setup-insulin",
           "width": 390,
-          "height": 1098,
+          "height": 1053,
           "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-647"
         },
         {
@@ -236,7 +236,7 @@
           "section": "02 · 건강 프로필과 확인",
           "name": "setup-summary",
           "width": 390,
-          "height": 1183,
+          "height": 1244,
           "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-698"
         },
         {
@@ -245,7 +245,7 @@
           "section": "02 · 건강 프로필과 확인",
           "name": "baseline",
           "width": 390,
-          "height": 1032,
+          "height": 977,
           "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-761"
         },
         {
@@ -254,7 +254,7 @@
           "section": "03 · 설정과 보관",
           "name": "settings",
           "width": 390,
-          "height": 1530,
+          "height": 1290,
           "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-816"
         },
         {
@@ -263,7 +263,7 @@
           "section": "03 · 설정과 보관",
           "name": "usual-insulin",
           "width": 390,
-          "height": 915,
+          "height": 901,
           "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-912"
         },
         {
@@ -290,17 +290,8 @@
           "section": "04 · 기록 시작과 검색",
           "name": "home-empty",
           "width": 390,
-          "height": 981,
+          "height": 970,
           "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-1043"
-        },
-        {
-          "id": "90:1111",
-          "label": "사진 선택",
-          "section": "04 · 기록 시작과 검색",
-          "name": "album",
-          "width": 390,
-          "height": 844,
-          "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-1111"
         },
         {
           "id": "90:1149",
@@ -308,7 +299,7 @@
           "section": "04 · 기록 시작과 검색",
           "name": "search",
           "width": 390,
-          "height": 894,
+          "height": 889,
           "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-1149"
         },
         {
@@ -398,7 +389,7 @@
           "section": "07 · 기록 습관 (제안)",
           "name": "ranking",
           "width": 390,
-          "height": 1339,
+          "height": 1319,
           "url": "https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=90-1735"
         }
       ]

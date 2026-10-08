@@ -1,6 +1,6 @@
 # 디자인 자료
 
-최신 UI 기준은 **[Figma 핵심 흐름](https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=11-193)**입니다. 승인된 홈과 레퍼런스를 바탕으로 전체 43개 화면을 정리했습니다.
+최신 UI 기준은 **[Figma 핵심 흐름](https://www.figma.com/design/NwWXuSOlgRyfongR48IfhG?node-id=11-193)**입니다. 승인된 홈과 레퍼런스를 바탕으로 전체 42개 화면을 정리했습니다. 별도 앨범 안내 화면은 삭제했고, 앨범 버튼은 휴대폰 기본 사진 선택창을 사용하는 흐름입니다.
 
 ## 먼저 볼 자료
 
