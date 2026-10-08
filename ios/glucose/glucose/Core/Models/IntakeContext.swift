@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum IntakeContext: String, Hashable, CaseIterable {
+enum IntakeContext: String, Hashable, CaseIterable, Codable {
     case meal = "MEAL"
     case snack = "SNACK"
     case hypoTreatment = "HYPO_TREATMENT"

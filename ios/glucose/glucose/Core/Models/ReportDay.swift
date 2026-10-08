@@ -36,6 +36,18 @@ enum ReportDay {
         return formatter
     }()
 
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = timeZone
+        formatter.dateFormat = "HH:mm"
+        return formatter
+    }()
+
+    static func timeString(from date: Date) -> String {
+        timeFormatter.string(from: date)
+    }
+
     static func apiString(from date: Date) -> String {
         apiFormatter.string(from: date)
     }
