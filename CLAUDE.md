@@ -53,11 +53,11 @@ AI_use_organize/               경진대회 제출용 AI 활용 기록 (건드�
 ## 현재 상태와 다음 할 일
 - 백엔드 완료(머지): A1, B0(`docs/backend-api.md`), B1(Sign in with Apple + JWT), B2(사진 업로드 R2 presigned URL), B3(job 워커 + ml-service 연동, 업로드 완료→음식 인식 job 자동 적재), B4(intake/insulin_event CRUD, `food_catalog` 시드, `GET /v1/photos/{id}/recognition`). ml-service PR(실제 음식 인식 + 그래프 파서)도 머지됨.
 - iOS 완료(머지): I0(뼈대, 탭 4개), I1(기록 목록·상세 + Mock Repository), I2(Sign in with Apple, 실기기 로그인 확인됨).
-- 진행: **상세 작업 순서는 `docs/backend-plan.md`**(백엔드), `ios-plan.md`(iOS, Downloads에 있던 원본). iOS는 I3~I7이 순서대로 PR 쌓여 있음(#15~#19, Dave 실기기 검증 대기). 백엔드는 B5(혈당 그래프 업로드·분석, `glucose_graph_upload`/`glucose_reading`, 재업로드는 덮어쓰기로 Dave 확인) 구현 완료, PR 올릴 예정 — 이어서 B6(에피소드)·B7(리포트) 진행 중. ml-service 음식 인식 기본 모델명 버그(`gpt-6-luna`→`luna`) 수정 PR #20도 올라간 상태.
+- 진행: **상세 작업 순서는 `docs/backend-plan.md`**(백엔드), `ios-plan.md`(iOS, Downloads에 있던 원본). iOS는 I3~I7이 순서대로 PR 쌓여 있음(#15~#19, Dave 실기기 검증 대기). 백엔드는 B5(혈당 그래프, PR #21)→B6(에피소드/반동 판정, PR #22)→B7(일일·주간 리포트, `GET /v1/reports/daily/{date}`·`GET /v1/reports/weekly/{date}`, PR 예정)까지 스택으로 구현 완료, 테스트 75개 통과. ml-service 음식 인식 기본 모델명 버그(`gpt-6-luna`→`luna`) 수정 PR #20도 올라간 상태.
 - Bundle ID는 `com.glubee.glubee`로 확정(앱 실제 이름 Glubee). `com.glucose.glucose`는 쓰지 않음 — 저장소/패키지명(`com.glucoselog`)은 그대로 유지.
-- 다음: 백엔드는 B6→B7, iOS는 I7 다음 Phase 4(I8 그래프 업로드).
+- 다음: 백엔드는 B8(레이트 리밋/OpenAPI/로그 점검/백업 복구 테스트, 병행 가능), iOS는 I7 다음 Phase 4(I8 그래프 업로드).
 - 비용: AWS 크레딧(Free Tier)으로 Lightsail $12/월 차감 예정. 크레딧 소진 시점 확인 필요.
-- 결정됨: 그래프 재업로드는 **덮어쓰기**(같은 사용자·같은 날짜면 기존 것을 지우고 새 것으로 교체).
+- 결정됨: 그래프 재업로드는 **덮어쓰기**. 반동 판정은 **그래프의 ABOVE_RANGE 플래그 재사용**(새 숫자 임계값을 코드에 고정하지 않음, 사용자별 목표범위 자동 반영). 리포트 문장(AI 요약)은 **지금은 안 만듦** — 숫자/건수만 반환(ml-service에 리포트용 엔드포인트가 없어서, 필요해지면 계약 문서부터 고치고 팀원과 협의).
 - 미결정: 저장소 공개 여부(경진대회 요건 확인 후 private 전환 검토 — 지금은 public 유지), 그래프 파서 담당 범위/진행 상황(현재는 팀원이 실제 OpenCV+OCR 구현 완료).
 
 ## 작업 방식 선호
