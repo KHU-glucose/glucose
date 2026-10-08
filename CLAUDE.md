@@ -44,6 +44,7 @@ AI_use_organize/               경진대회 제출용 AI 활용 기록 (건드�
 - 이미지는 `ghcr.io/khu-glucose/glucose-app`, `glucose-ml` (조직 이름이 대문자라 소문자로 변환해서 사용).
 - 사진·백업은 Cloudflare R2(`glucose-photos`, `glucose-backups`, 비공개). 매일 새벽 4시 DB 백업(cron → R2, 30일 보관).
 - 재시작 정책 `unless-stopped`. 서버 재부팅 후 자동 복구된다.
+- 백업 복구 테스트·장애 시 복구 절차: `infra/README.md`, `infra/restore-test.sh` (임시 컨테이너에만 복구, 운영 DB는 안 건드림).
 
 ## 보안·개인정보 (반드시 지킬 것)
 - `.env`, API 키, `.pem`, 혈당 CSV·그래프 이미지·PDF·음식 사진은 **절대 커밋하지 않는다.** 테스트 데이터는 팀 비공개 드라이브로만 공유.
