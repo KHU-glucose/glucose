@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -15,6 +16,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 
 import com.glucoselog.episode.GlucoseSample;
+import com.glucoselog.insulin.InsulinEvent;
 import com.glucoselog.insulin.InsulinEventRepository;
 
 @Service
@@ -46,9 +48,13 @@ public class DailyReportService {
 
         Instant from = date.atStartOfDay(KST).toInstant();
         Instant to = date.plusDays(1).atStartOfDay(KST).toInstant();
-        int insulinEventsCount = insulinEventRepository
+        List<DailyReportResponse.InsulinEventMarker> insulinEvents = insulinEventRepository
                 .findByUserIdAndOccurredAtGreaterThanEqualAndOccurredAtLessThan(userId, from, to)
-                .size();
+                .stream()
+                .sorted(Comparator.comparing(InsulinEvent::getOccurredAt))
+                .map(event -> new DailyReportResponse.InsulinEventMarker(
+                        event.getOccurredAt(), event.getUnits(), event.getKind()))
+                .toList();
 
         List<EducationCardResponse> educationCards = new ArrayList<>();
         if (daySummary.isEmpty()) {
@@ -58,7 +64,8 @@ public class DailyReportService {
             educationCards.addAll(cardsFor(EducationCardTrigger.REBOUND));
         }
 
-        return new DailyReportResponse(date, glucoseSummary, episodes, insulinEventsCount, educationCards);
+        return new DailyReportResponse(
+                date, glucoseSummary, episodes, insulinEvents.size(), insulinEvents, educationCards);
     }
 
     private List<EducationCardResponse> cardsFor(EducationCardTrigger trigger) {

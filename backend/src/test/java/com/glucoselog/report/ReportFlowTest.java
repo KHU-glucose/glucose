@@ -160,6 +160,10 @@ class ReportFlowTest {
         assertThat(episode.get("intake_count")).isEqualTo(1);
 
         assertThat(body.get("insulin_events_count")).isEqualTo(1);
+        List<Map<String, Object>> insulinEvents = (List<Map<String, Object>>) body.get("insulin_events");
+        assertThat(insulinEvents).hasSize(1);
+        assertThat(insulinEvents.get(0).get("occurred_at")).isEqualTo("2026-10-01T09:05:00Z");
+        assertThat(insulinEvents.get(0).get("kind")).isEqualTo("처치");
 
         List<Map<String, Object>> cards = (List<Map<String, Object>>) body.get("education_cards");
         assertThat(cards).extracting(c -> c.get("trigger")).containsExactly("REBOUND");

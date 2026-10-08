@@ -1,6 +1,7 @@
 package com.glucoselog.report;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -10,8 +11,13 @@ public record DailyReportResponse(
         GlucoseSummary glucose,
         List<EpisodeSummary> episodes,
         int insulinEventsCount,
+        List<InsulinEventMarker> insulinEvents,
         List<EducationCardResponse> educationCards) {
 
     public record GlucoseSummary(BigDecimal coverageRatio, BigDecimal average, Integer min, Integer max, int readingsCount) {
+    }
+
+    /** 그래프 위에 표시할 인슐린 기록(입력된 사실만, 시각순). */
+    public record InsulinEventMarker(Instant occurredAt, BigDecimal units, String kind) {
     }
 }
