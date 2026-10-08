@@ -241,7 +241,6 @@ R2(S3 호환) presigned PUT URL을 발급한다. **앱이 이 URL로 R2에 직�
 | `INTAKE_NOT_FOUND` | 404 | 기록 없음/본인 소유 아님 |
 | `INSULIN_EVENT_NOT_FOUND` | 404 | 인슐린 기록 없음/본인 소유 아님 |
 | `INTERNAL_ERROR` | 500 | 서버 오류 |
-
 | `GLUCOSE_GRAPH_NOT_FOUND` | 404 | 그래프 업로드 없음/본인 소유 아님 |
 | `GLUCOSE_GRAPH_NOT_UPLOADED` | 409 | R2 업로드 전에 완료 통보함 |
 | `GRAPH_NOT_READY` | 409 | 그래프 분석 job이 아직 대기/처리 중 |
