@@ -117,8 +117,8 @@ ml-service (ml-service:8000, FastAPI)
 | 필드 | 타입 | 설명 |
 |---|---|---|
 | `is_food_photo` | boolean | 음식·음료가 없는 사진이면 `false`, 이때 `items`는 빈 배열 |
-| `items[].name` | string | 한국어 일반 명칭 (예: 짜장면, 집밥, 사탕). `food_catalog` 매칭에 사용 |
-| `items[].count` | integer \| null | 낱개로 셈 수 있을 때만. 그릇 음식은 1, 셈 수 없으면 `null` |
+| `items[].name` | string | **식사(`MEAL`)**: 요리별로 나누지 않고 대분류 이름 `한식` `중식` `일식` `양식` `기타 식사` 중 하나 (대분류마다 한 항목). **간식·사탕류·음료·술**: 품목별 한국어 일반 명칭, 처치 음식 표준 이름 목록에 있으면 그 이름 그대로. `food_catalog` 매칭에 사용 |
+| `items[].count` | integer \| null | 경계가 보이는 낱개를 확실히 셀 수 있을 때만. 식사(`MEAL`)는 항상 `null`, 셀 수 없으면 `null` |
 | `items[].unit` | string | 개, 조각, 팩, 컵, 그릇, 공기, 병, 잔 중 하나 |
 | `items[].category_hint` | enum | `MEAL` `SNACK` `FAST_SUGAR` `DRINK` `ALCOHOL` |
 | `items[].tags` | enum[] | `HIGH_FAT` `HIGH_CARB` `FAST_SUGAR` (분석 창 길이 결정에 사용) |
@@ -129,6 +129,11 @@ ml-service (ml-service:8000, FastAPI)
 
 ### 규칙
 
+- **식사 이름은 대분류까지만** 돌려줍니다(2026-10-08 Dave 결정). 혈당 기록에 필요한 건 저혈당 처치용 간식의
+  품목·개수이고, 식사 세부 요리명은 필요 없으며 응답 시간(중앙값 3초)을 줄이는 게 우선입니다.
+  계획: `eval/food/snack-recognition-plan-2026-10-08.md`.
+- 처치 음식 표준 이름 목록은 프롬프트(`ml-service/food_prompts.py`)와 백엔드 `food_catalog`에 같은 이름으로 맞춥니다.
+  목록 확정 전까지는 초안입니다.
 - 저혈당 처치 여부는 **판단하지 않습니다.** 같은 사탕도 직전 혈당에 따라 달라서 백엔드가 판정합니다.
 - 칼로리·당류·탄수화물 숫자는 **돌려주지 않습니다.**
 - AI 출력은 구조화 출력(tool use / JSON schema)으로 강제하고, Pydantic 검증에 실패하면 내부에서 1회 재시도 후 502를 돌려줍니다.
@@ -210,7 +215,7 @@ ml-service (ml-service:8000, FastAPI)
 
 | 항목 | 기준 |
 |---|---|
-| 음식 이름 일치 | 85% 이상 |
+| 음식 이름 일치 (식사는 대분류, 간식·처치 음식은 품목명) | 85% 이상 |
 | 개수 일치 (낱개 음식) | 80% 이상 |
 | 저혈당 처치 음식 구분 (사탕·주스·초콜릿·젤리·포도당) | 95% 이상 |
 | 음식 아닌 사진 거르기 | 95% 이상 |

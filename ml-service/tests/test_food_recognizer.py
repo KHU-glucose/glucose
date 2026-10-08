@@ -91,3 +91,18 @@ def test_glucose_candidate_is_opt_in_and_preserves_output_contract():
     schema = FoodRecognitionPayload.model_json_schema()
     assert "management_group" not in schema["$defs"]["FoodItem"]["properties"]
     assert "priority_food" not in schema["$defs"]["FoodItem"]["properties"]
+
+
+def test_snack_candidate_is_opt_in_shorter_and_keeps_contract_rules():
+    from food_prompts import ACTIVE_PROMPT_VERSION, SNACK_STANDARD_NAMES
+
+    prompt = get_food_prompt("snack-v7")
+    assert ACTIVE_PROMPT_VERSION == "examples-v3"
+    # 응답 시간 목표 때문에 v3보다 짧아야 한다.
+    assert len(prompt) < len(get_food_prompt("examples-v3"))
+    for meal_name in ("한식", "중식", "일식", "양식", "기타 식사"):
+        assert meal_name in prompt
+    for name in SNACK_STANDARD_NAMES:
+        assert name in prompt
+    assert len(set(SNACK_STANDARD_NAMES)) == len(SNACK_STANDARD_NAMES)
+    assert "인슐린 용량" in prompt and "치료 적합성" in prompt
