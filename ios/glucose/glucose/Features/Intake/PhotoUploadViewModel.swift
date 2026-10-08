@@ -21,6 +21,7 @@ enum PhotoUploadState: Equatable {
 final class PhotoUploadViewModel: NSObject {
 
     private(set) var state: PhotoUploadState = .idle
+    private(set) var photoId: UUID?
 
     func upload(imageData: Data, context: IntakeContext) async {
         state = .starting
@@ -30,6 +31,7 @@ final class PhotoUploadViewModel: NSObject {
                 method: .post,
                 body: StartPhotoUploadRequest(contentType: "image/jpeg", context: context.rawValue)
             )
+            photoId = started.photoId
 
             try await putToR2(data: imageData, url: started.uploadUrl, contentType: "image/jpeg")
 
