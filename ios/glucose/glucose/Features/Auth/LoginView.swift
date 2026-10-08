@@ -18,7 +18,7 @@ struct LoginView: View {
                 Image(systemName: "drop.fill")
                     .font(.system(size: 48))
                     .foregroundStyle(.tint)
-                Text("글루코스")
+                Text("Glubee")
                     .font(.largeTitle.bold())
                 Text("혈당 기록을 시작하려면 로그인하세요")
                     .foregroundStyle(.secondary)
