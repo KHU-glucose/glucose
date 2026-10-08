@@ -13,3 +13,6 @@ eval/food/images/*
 !eval/food/images/.gitkeep
 eval/food/labels.json
 eval/food/reports/
+
+# Local evaluation datasets and photos (not Git assets).
+/food_testing/
