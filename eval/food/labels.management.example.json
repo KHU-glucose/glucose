@@ -1,0 +1,53 @@
+[
+  {
+    "file": "plain-fish.jpg",
+    "is_food_photo": true,
+    "dataset_group": "MEAL",
+    "annotation_complete": true,
+    "management_annotation_complete": true,
+    "items": [
+      {"name": "갈치구이", "management_group": "FISH_PLAIN_GRILLED_REFERENCE", "count": null, "unit": "개", "category_hint": "MEAL"}
+    ],
+    "source": "직접 촬영; 일반 구이 조리법을 사람이 확인한 사진으로 교체",
+    "license": "본인 촬영 사진"
+  },
+  {
+    "file": "rice-and-noodles.jpg",
+    "is_food_photo": true,
+    "dataset_group": "MEAL",
+    "annotation_complete": true,
+    "items": [
+      {"name": "흰쌀밥", "aliases": ["쌀밥", "밥"], "management_group": "WHITE_RICE", "priority_food": true, "count": null, "unit": "공기", "category_hint": "MEAL"},
+      {"name": "국수", "priority_food": true, "count": null, "unit": "개", "category_hint": "MEAL"}
+    ]
+  },
+  {
+    "file": "visible-zero-cola.jpg",
+    "is_food_photo": true,
+    "dataset_group": "PACKAGED",
+    "annotation_complete": true,
+    "management_annotation_complete": true,
+    "items": [
+      {"name": "제로 콜라", "aliases": ["무설탕 콜라"], "management_group": "ZERO_COLA", "priority_food": true, "count": 1, "unit": "병", "category_hint": "DRINK"}
+    ],
+    "source": "제로 표시가 사진에서 읽히는 본인 촬영 제품으로 교체"
+  },
+  {
+    "file": "cola-without-label.jpg",
+    "is_food_photo": true,
+    "dataset_group": "SNACK",
+    "annotation_complete": true,
+    "items": [
+      {"name": "콜라", "priority_food": true, "requires_uncertainty": true, "count": 1, "unit": "컵", "category_hint": "DRINK"}
+    ],
+    "source": "일반/제로 여부가 사진만으로 구분되지 않는 본인 촬영 음료로 교체; 그룹을 추측해 채우지 않음"
+  },
+  {
+    "file": "keyboard.jpg",
+    "is_food_photo": false,
+    "dataset_group": "NONFOOD",
+    "annotation_complete": true,
+    "management_annotation_complete": true,
+    "items": []
+  }
+]

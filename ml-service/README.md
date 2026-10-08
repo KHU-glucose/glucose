@@ -64,3 +64,9 @@ python -m pytest ml-service/tests
 사람이 작성한 사진별 정답을 넣고 `python ml-service/eval_food.py --limit 10`으로
 음식명·개수·비음식 판별 점수를 측정할 수 있습니다. 사전 검사는 `--check`입니다.
 준비 방법과 지표 정의는 [음식 평가 안내](../eval/food/README.md)를 참고하세요.
+
+프롬프트 버전은 `food_prompts.py`에서 관리하며, `--prompt-version`으로 같은 데이터에
+기존안과 개선안을 비교할 수 있습니다. 식사류는 음식명만 분석하고 count=null로 반환하며,
+간식류는 보이는 낱개·조각·포장 수만 기록합니다. 식사류의 unit은 기존 스키마 호환용입니다.
+`likely_consumed_all`은 사진만으로 실제 섭취 여부를 알 수 없어 null을 반환하도록 지시합니다.
+이는 프롬프트의 지침이며 Pydantic이 사실 여부나 정책 준수를 보증하는 것은 아닙니다.
