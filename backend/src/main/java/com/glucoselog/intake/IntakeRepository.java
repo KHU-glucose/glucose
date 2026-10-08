@@ -14,6 +14,9 @@ public interface IntakeRepository extends JpaRepository<Intake, UUID> {
 
     Optional<Intake> findByIdAndUserId(UUID id, UUID userId);
 
+    List<Intake> findByUserIdAndOccurredAtGreaterThanEqualAndOccurredAtLessThan(
+            UUID userId, Instant from, Instant to);
+
     // cursor가 없을 때와 있을 때를 분리한다. "? IS NULL OR ..." 형태로 합치면 null 바인딩 시
     // Postgres가 파라미터 타입을 추론하지 못해 "could not determine data type of parameter"로 깨진다.
     List<Intake> findByUserIdOrderByOccurredAtDescIdDesc(UUID userId, Pageable pageable);

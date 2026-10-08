@@ -34,7 +34,17 @@ final class APIClient {
 
         decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
-        decoder.dateDecodingStrategy = .iso8601
+        // 서버의 created_at 등은 소수점 초가 붙어서 온다("...:45.123456Z"). 기본 .iso8601이
+        // 이를 못 읽는 OS 버전이 있어(배포 대상 iOS 17) 두 형식을 모두 직접 받는다.
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let string = try container.decode(String.self)
+            if let date = (try? Date.ISO8601FormatStyle(includingFractionalSeconds: true).parse(string))
+                ?? (try? Date.ISO8601FormatStyle().parse(string)) {
+                return date
+            }
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "ISO-8601 날짜가 아닙니다: \(string)")
+        }
     }
 
     /// JSON 응답을 디코딩해서 돌려준다.
@@ -42,10 +52,11 @@ final class APIClient {
     func send<Response: Decodable>(
         path: String,
         method: HTTPMethod = .get,
+        queryItems: [URLQueryItem] = [],
         body: Encodable? = nil,
         authenticated: Bool = true
     ) async throws -> Response {
-        let (data, _) = try await performWithRetry(path: path, method: method, body: body, authenticated: authenticated, allowRetry: true)
+        let (data, _) = try await performWithRetry(path: path, method: method, queryItems: queryItems, body: body, authenticated: authenticated, allowRetry: true)
         do {
             return try decoder.decode(Response.self, from: data)
         } catch {
@@ -57,26 +68,28 @@ final class APIClient {
     func sendVoid(
         path: String,
         method: HTTPMethod,
+        queryItems: [URLQueryItem] = [],
         body: Encodable? = nil,
         authenticated: Bool = true
     ) async throws {
-        _ = try await performWithRetry(path: path, method: method, body: body, authenticated: authenticated, allowRetry: true)
+        _ = try await performWithRetry(path: path, method: method, queryItems: queryItems, body: body, authenticated: authenticated, allowRetry: true)
     }
 
     private func performWithRetry(
         path: String,
         method: HTTPMethod,
+        queryItems: [URLQueryItem],
         body: Encodable?,
         authenticated: Bool,
         allowRetry: Bool
     ) async throws -> (Data, HTTPURLResponse) {
-        let request = try makeRequest(path: path, method: method, body: body, authenticated: authenticated)
+        let request = try makeRequest(path: path, method: method, queryItems: queryItems, body: body, authenticated: authenticated)
         let (data, response) = try await execute(request)
 
         if response.statusCode == 401, authenticated, allowRetry {
             let refreshed = await AuthSession.shared.refreshAccessToken()
             if refreshed {
-                return try await performWithRetry(path: path, method: method, body: body, authenticated: authenticated, allowRetry: false)
+                return try await performWithRetry(path: path, method: method, queryItems: queryItems, body: body, authenticated: authenticated, allowRetry: false)
             }
             await AuthSession.shared.signOut()
             throw APIError.notAuthenticated
@@ -92,8 +105,16 @@ final class APIClient {
         return (data, response)
     }
 
-    private func makeRequest(path: String, method: HTTPMethod, body: Encodable?, authenticated: Bool) throws -> URLRequest {
-        var request = URLRequest(url: baseURL.appendingPathComponent(path))
+    private func makeRequest(path: String, method: HTTPMethod, queryItems: [URLQueryItem], body: Encodable?, authenticated: Bool) throws -> URLRequest {
+        var components = URLComponents(url: baseURL.appendingPathComponent(path), resolvingAgainstBaseURL: false)
+        if !queryItems.isEmpty {
+            components?.queryItems = queryItems
+        }
+        guard let url = components?.url else {
+            throw APIError.invalidResponse
+        }
+
+        var request = URLRequest(url: url)
         request.httpMethod = method.rawValue
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 

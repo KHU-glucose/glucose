@@ -96,13 +96,21 @@ def test_glucose_candidate_is_opt_in_and_preserves_output_contract():
     assert "priority_food" not in schema["$defs"]["FoodItem"]["properties"]
 
 
-def test_cuisine_default_extends_v3_without_rewriting_existing_rules():
+def test_cuisine_candidate_extends_v3_without_rewriting_existing_rules():
     from food_prompts import ACTIVE_PROMPT_VERSION
 
-    assert ACTIVE_PROMPT_VERSION == "cuisine-v7"
-    assert get_food_prompt(ACTIVE_PROMPT_VERSION).startswith(get_food_prompt("examples-v3"))
-    recognizer = OpenAIFoodRecognizer(client=SimpleNamespace(responses=FakeResponses()))
+    # cuisine-v7은 실제 사진 평가 전까지 실험 후보다. 운영 기본값은 v3 (2026-10-08 Dave 결정).
+    assert ACTIVE_PROMPT_VERSION == "examples-v3"
+    assert get_food_prompt("cuisine-v7").startswith(get_food_prompt("examples-v3"))
+    recognizer = OpenAIFoodRecognizer(client=SimpleNamespace(responses=FakeResponses()), prompt_version="cuisine-v7")
     assert recognizer.prompt == get_food_prompt("cuisine-v7")
     for rule in ("food_group", "식기·배경·촬영 상황", "나라보다 간식 분류를 우선",
                  "주스는 food_group=null", "김밥·만두·튀김은 계속 MEAL"):
         assert rule in recognizer.prompt
+
+
+def test_default_model_is_an_existing_model_id(monkeypatch):
+    # `luna`처럼 존재하지 않는 ID로 바뀌면 모든 인식 호출이 404로 실패한다(2026-10-08 운영 장애).
+    monkeypatch.delenv("FOOD_MODEL", raising=False)
+    monkeypatch.delenv("OPENAI_MODEL", raising=False)
+    assert OpenAIFoodRecognizer(api_key="test").model == "gpt-6-luna"

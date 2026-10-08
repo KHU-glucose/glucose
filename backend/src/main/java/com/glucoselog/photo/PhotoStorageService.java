@@ -6,10 +6,13 @@ import java.time.Duration;
 import org.springframework.stereotype.Service;
 
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
@@ -58,6 +61,23 @@ public class PhotoStorageService {
             }
             throw e;
         }
+    }
+
+    /** prefix 아래 객체를 모두 지우고 지운 개수를 돌려준다. 계정 삭제 시 사용자 경로 전체 정리용. */
+    public int deleteByPrefix(String prefix) {
+        int deleted = 0;
+        ListObjectsV2Request request = ListObjectsV2Request.builder()
+                .bucket(properties.photoBucket())
+                .prefix(prefix)
+                .build();
+        for (S3Object object : s3Client.listObjectsV2Paginator(request).contents()) {
+            s3Client.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(properties.photoBucket())
+                    .key(object.key())
+                    .build());
+            deleted++;
+        }
+        return deleted;
     }
 
     public byte[] download(String objectKey) {

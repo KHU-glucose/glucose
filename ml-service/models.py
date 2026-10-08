@@ -66,7 +66,7 @@ class FoodRecognitionResponse(FoodRecognitionPayload):
                     ],
                     "likely_consumed_all": True,
                     "meta": {
-                        "model": "luna",
+                        "model": "gpt-6-luna",
                         "latency_ms": 1840,
                         "input_tokens": 1120,
                         "output_tokens": 160,

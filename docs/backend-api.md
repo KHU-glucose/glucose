@@ -108,6 +108,12 @@ Apple이 발급한 identity token을 검증해 `app_user`를 upsert하고 자체
 
 응답: `204 No Content`. 이후 해당 access/refresh 토큰은 모두 무효가 된다.
 
+삭제 범위:
+- **즉시 (요청 안에서)**: DB의 사용자·기록·사진 정보·인슐린·혈당 데이터 전부(`app_user` cascade), 사진·그래프에 연결된 인식/분석 job 기록.
+- **곧바로 비동기로**: R2에 올라간 사진·그래프 파일. 같은 트랜잭션에서 `USER_STORAGE_PURGE` job을 넣고 워커가
+  `photos/{userId}/`, `graphs/{userId}/` 경로를 통째로 지운다(업로드만 하고 완료 안 한 파일 포함). 실패하면 재시도한다.
+- **남는 것**: 매일 새벽 DB 백업(R2, 30일 보관)에는 삭제 전 데이터가 백업 보관 기간 동안 남는다. 개인정보 처리 안내에 적어야 한다.
+
 ## 8. `POST /v1/photos` — 사진 업로드 시작 (B2)
 
 R2(S3 호환) presigned PUT URL을 발급한다. **앱이 이 URL로 R2에 직접 업로드하며, 서버는 바이트를 중계하지 않는다.**
@@ -243,11 +249,12 @@ R2(S3 호환) presigned PUT URL을 발급한다. **앱이 이 URL로 R2에 직�
 | `INTAKE_NOT_FOUND` | 404 | 기록 없음/본인 소유 아님 |
 | `INSULIN_EVENT_NOT_FOUND` | 404 | 인슐린 기록 없음/본인 소유 아님 |
 | `INTERNAL_ERROR` | 500 | 서버 오류 |
-
 | `GLUCOSE_GRAPH_NOT_FOUND` | 404 | 그래프 업로드 없음/본인 소유 아님 |
 | `GLUCOSE_GRAPH_NOT_UPLOADED` | 409 | R2 업로드 전에 완료 통보함 |
 | `GRAPH_NOT_READY` | 409 | 그래프 분석 job이 아직 대기/처리 중 |
-| `GRAPH_PARSE_FAILED` | 422 | 그래프 인식 실패(격자·눈금·날짜 인식 불가, 데이터 10% 미만 등) |
+| `GRAPH_NOT_RECOGNIZED` | 422 | 리브레 일일 그래프로 인식 못 함(격자·눈금·날짜를 못 찾음) — "지원하지 않는 이미지" 안내 |
+| `GRAPH_TOO_LITTLE_DATA` | 422 | 그래프는 맞지만 곡선이 하루의 10% 미만 — "데이터가 너무 적어요" 안내 |
+| `GRAPH_PARSE_FAILED` | 422 | 그 밖의 그래프 분석 실패(이미지 오류, 재시도 소진 등) |
 | `GLUCOSE_DAY_NOT_FOUND` | 404 | 해당 날짜의 혈당 데이터 없음 |
 
 이후 단계(리포트)에서 추가되는 코드는 해당 PR에서 이 표에 이어 추가한다.
@@ -269,7 +276,8 @@ R2에 실제로 올라왔는지 확인한 뒤 그래프 분석을 백그라운�
 응답: `204 No Content`
 
 ### `GET /v1/glucose-graphs/{uploadId}` — 분석 상태 조회
-분석 중이면 409 `GRAPH_NOT_READY`, 실패했으면 422 `GRAPH_PARSE_FAILED`.
+분석 중이면 409 `GRAPH_NOT_READY`. 실패했으면 422 — 원인별로 `GRAPH_NOT_RECOGNIZED`(지원하지 않는 이미지),
+`GRAPH_TOO_LITTLE_DATA`(데이터 부족), 그 외 `GRAPH_PARSE_FAILED`.
 완료되면 200: `{ "date": "2026-10-01", "coverage_ratio": 0.94 }`
 
 ### `GET /v1/glucose-readings/{date}` — 날짜별 혈당 시계열 조회
@@ -286,7 +294,61 @@ R2에 실제로 올라왔는지 확인한 뒤 그래프 분석을 백그라운�
 ```
 `value`가 `null`인 구간은 **보간하지 않은 결측**이다. 해당 날짜에 분석 완료된 그래프가 없으면 404 `GLUCOSE_DAY_NOT_FOUND`.
 
-## 15. 앞으로 추가될 것 (문서 자리만 미리 잡아둠)
+## 15. 에피소드/반동 판정 (B6)
 
-- 에피소드/반동 판정 (B6)
-- 일일·주간 리포트 (B7)
+API는 없다. `EpisodeAnalyzer`(순수 함수)만 있고, 리포트(B7)가 실제로 조회할 때 intake/glucose_reading을
+가져와서 이 함수에 넘기는 방식. 파라미터(묶는 간격, 분석 창 길이, 저혈당 임계값)는 `application.yml`의 `episode.*`.
+결과는 저장하지 않고 매번 다시 계산한다 — 사진/그래프가 나중에 추가로 올라와도 오래된 값이 남지 않는다.
+
+## 16. 리포트 (B7)
+
+숫자는 전부 코드가 계산한다. **문장(AI 요약)은 아직 없다** — ml-service 계약에 리포트 문장 생성
+엔드포인트가 없어서, 지금은 숫자/건수만 반환한다(Dave 확인). `education_card`는 조건에 따라 붙는
+고정 텍스트고 AI가 생성하지 않는다.
+
+### `GET /v1/reports/daily/{date}` — 일일 리포트
+`date`는 `YYYY-MM-DD`(한국 시간 기준 하루). 응답 200:
+```json
+{
+  "date": "2026-10-01",
+  "glucose": { "coverage_ratio": 0.94, "average": 142.3, "min": 68, "max": 210, "readings_count": 90 },
+  "episodes": [
+    {
+      "start_at": "2026-10-01T09:00:00Z",
+      "original_context": "SNACK",
+      "effective_context": "HYPO_TREATMENT",
+      "auto_reclassified": true,
+      "window_end_at": "2026-10-01T11:00:00Z",
+      "rebound_detected": true,
+      "intake_count": 1
+    }
+  ],
+  "insulin_events_count": 1,
+  "insulin_events": [ { "occurred_at": "2026-10-01T09:05:00Z", "units": 3, "kind": "처치" } ],
+  "education_cards": [ { "trigger": "REBOUND", "title": "...", "body": "..." } ]
+}
+```
+- `glucose`가 `null`이면 그날 분석 완료된 그래프가 없다 — **판단 불가**.
+- 에피소드의 `auto_reclassified`/`rebound_detected`가 `null`이면 "확인해봤더니 아니다"가 아니라
+  **그 시점에 쓸 글루코스 데이터가 없어서 판단 자체를 못 했다**는 뜻이다(`false`와 다르다).
+
+### `GET /v1/reports/weekly/{date}` — 주간 리포트
+`date`는 그 주(월~일, ISO 기준) 안의 임의의 날. 응답 200:
+```json
+{
+  "week_start": "2026-09-28",
+  "week_end": "2026-10-04",
+  "days_with_data": 5,
+  "days_insufficient": 2,
+  "average_glucose": 138.2,
+  "episodes_count": 12,
+  "rebound_count": 2,
+  "insulin_events_count": 10
+}
+```
+같은 데이터로 다시 호출하면 항상 같은 숫자가 나온다(캐시하지 않고 매번 다시 계산).
+
+## 17. 앞으로 추가될 것 (문서 자리만 미리 잡아둠)
+
+- 리포트 문장(AI 요약) — ml-service 계약에 추가 협의 필요
+- B8(레이트 리밋, OpenAPI, 로그 점검, 백업 복구 테스트)
