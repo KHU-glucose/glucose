@@ -99,7 +99,18 @@ EXAMPLES_V3 = """
 """.strip()
 
 
-PROMPTS = {'baseline-v1': BASELINE_V1, 'rules-v2': RULES_V2, 'examples-v3': EXAMPLES_V3}
+V3_NAME_RULE = """- name은 한국어로 일상에서 쓰는 대표 요리명입니다. 브랜드나 임의의 원재료 나열을 이름으로 쓰지 않습니다.
+  전체 형태와 조리 방식, 국물, 주재료를 함께 보고 가장 잘 맞는 요리명을 고릅니다.
+  식별 근거가 부족한 세부 종류만 상위 이름으로 답하고 confidence를 낮춥니다."""
+
+
+FOCUSED_V4 = EXAMPLES_V3.replace(V3_NAME_RULE, """- name은 한국어의 일반적인 완성 요리명입니다. 보이는 재료 목록이나 임의의 조리 설명을 요리명 대신 쓰지 않습니다.
+  전체 형태·표면 질감·조리 방식·국물·주재료가 함께 뒷받침하는 가장 구체적인 일반 요리명을 고릅니다.
+  재료 하나가 눈에 띈다는 이유로 요리 전체를 그 재료 이름으로 바꾸지 않습니다.
+  시각적으로 구분할 수 없는 세부 종류만 상위 이름으로 답하고 confidence를 낮춥니다.""")
+
+
+PROMPTS = {'baseline-v1': BASELINE_V1, 'rules-v2': RULES_V2, 'examples-v3': EXAMPLES_V3, 'focused-v4': FOCUSED_V4}
 ACTIVE_PROMPT_VERSION = 'examples-v3'
 
 
