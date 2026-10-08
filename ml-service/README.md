@@ -7,13 +7,13 @@ Tesseract OCR로 15분 간격 혈당 시계열로 변환하는 내부 FastAPI �
 
 ```env
 OPENAI_API_KEY=...
-FOOD_MODEL=luna
+FOOD_MODEL=gpt-6-luna
 INTERNAL_TOKEN=dev-token
 LOG_LEVEL=INFO
 ML_MAX_CONCURRENCY=4
 ```
 
-`FOOD_MODEL`이 없으면 `OPENAI_MODEL`, 그마저 없으면 `luna`를 사용합니다.
+`FOOD_MODEL`이 없으면 `OPENAI_MODEL`, 그마저 없으면 `gpt-6-luna`를 사용합니다.
 그래프 OCR 실행 파일을 자동으로 찾지 못하는 로컬 환경에서는 `TESSERACT_CMD`를
 설정할 수 있습니다. Docker 이미지에는 영문·한글 Tesseract 데이터가 포함됩니다.
 

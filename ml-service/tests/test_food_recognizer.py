@@ -91,3 +91,10 @@ def test_glucose_candidate_is_opt_in_and_preserves_output_contract():
     schema = FoodRecognitionPayload.model_json_schema()
     assert "management_group" not in schema["$defs"]["FoodItem"]["properties"]
     assert "priority_food" not in schema["$defs"]["FoodItem"]["properties"]
+
+
+def test_default_model_is_an_existing_model_id(monkeypatch):
+    # `luna`처럼 존재하지 않는 ID로 바뀌면 모든 인식 호출이 404로 실패한다(2026-10-08 운영 장애).
+    monkeypatch.delenv("FOOD_MODEL", raising=False)
+    monkeypatch.delenv("OPENAI_MODEL", raising=False)
+    assert OpenAIFoodRecognizer(api_key="test").model == "gpt-6-luna"
