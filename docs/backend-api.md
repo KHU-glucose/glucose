@@ -314,6 +314,7 @@ API는 없다. `EpisodeAnalyzer`(순수 함수)만 있고, 리포트(B7)가 실�
     }
   ],
   "insulin_events_count": 1,
+  "insulin_events": [ { "occurred_at": "2026-10-01T09:05:00Z", "units": 3, "kind": "처치" } ],
   "education_cards": [ { "trigger": "REBOUND", "title": "...", "body": "..." } ]
 }
 ```
