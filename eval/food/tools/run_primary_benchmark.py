@@ -14,7 +14,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "ml-service"))
-from eval_food import load_dataset, run_evaluation, names_match
+from eval_food import load_dataset, run_evaluation, names_match, summarize_accuracy
 from food_prompts import get_food_prompt
 
 DATA = ROOT / "food_testing"
@@ -69,6 +69,7 @@ def summarize(reports, selection):
             "model": MODEL, "prompt_version": VERSION,
             "prompt_sha256": hashlib.sha256(get_food_prompt(VERSION).encode()).hexdigest(),
             "groups": dict(groups), "strict_name_hits_without_aliases": strict_hits,
+            "accuracy_summary": summarize_accuracy(cases),
             "median_attempt_latency_ms": statistics.median(c["latency_ms"] for c in cases) if cases else None,
             "recorded_success_tokens": {"input": inputs, "output": outputs},
             "standard_uncached_success_token_cost_estimate_usd": round((inputs * 0.10 + outputs * 0.50)/1_000_000, 6),
