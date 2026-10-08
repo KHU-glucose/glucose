@@ -34,7 +34,17 @@ final class APIClient {
 
         decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
-        decoder.dateDecodingStrategy = .iso8601
+        // 서버의 created_at 등은 소수점 초가 붙어서 온다("...:45.123456Z"). 기본 .iso8601이
+        // 이를 못 읽는 OS 버전이 있어(배포 대상 iOS 17) 두 형식을 모두 직접 받는다.
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let string = try container.decode(String.self)
+            if let date = (try? Date.ISO8601FormatStyle(includingFractionalSeconds: true).parse(string))
+                ?? (try? Date.ISO8601FormatStyle().parse(string)) {
+                return date
+            }
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "ISO-8601 날짜가 아닙니다: \(string)")
+        }
     }
 
     /// JSON 응답을 디코딩해서 돌려준다.
