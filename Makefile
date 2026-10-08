@@ -2,7 +2,7 @@ PYTHON ?= python
 LABELS ?= eval/food/labels.json
 IMAGES ?= eval/food/images
 LIMIT ?= 100
-PROMPT ?= rules-v2
+PROMPT ?= examples-v3
 SPLIT ?= development
 
 .PHONY: eval eval-check test-ml

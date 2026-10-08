@@ -74,3 +74,9 @@ def test_baseline_matches_preserved_october_6_evaluation_prompt():
     assert hashlib.sha256(get_food_prompt("baseline-v1").encode()).hexdigest() == (
         "b8e6dd0883e7cfdc28006260eb192d2512d719f468e8c2b13c2f63d01a28b27e"
     )
+
+
+def test_v3_remains_identical_to_its_first_evaluated_version():
+    assert hashlib.sha256(get_food_prompt("examples-v3").encode()).hexdigest() == (
+        "137628147f2a9200ce9d2d73fcb92c62de80d3bd7871b2872fc6e6938a3a2f14"
+    )

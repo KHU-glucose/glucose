@@ -94,7 +94,7 @@ python ml-service/eval_food.py --limit 10
 
 ## 프롬프트 버전 보존과 비교
 
-현재 후보: baseline-v1, rules-v2. 기본값: rules-v2.
+현재 후보: baseline-v1, rules-v2, examples-v3. 기본값: examples-v3.
 원문은 food_prompts.py에 보존하며 --prompt-version으로 선택합니다.
 평가에는 프롬프트 원문·해시·사진·스키마·설정을 기록합니다.
 make eval은 기존 완료 목표와 데이터 조건을 검사하며 미측정은 통과로 취급하지 않습니다.

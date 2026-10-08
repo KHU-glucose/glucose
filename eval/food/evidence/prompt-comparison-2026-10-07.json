@@ -824,6 +824,394 @@
           }
         }
       ]
+    },
+    {
+      "version": "examples-v3",
+      "model": "gpt-6-luna",
+      "created_at_utc": "2026-10-07T16:18:32.729275+09:00",
+      "prompt_sha256": "137628147f2a9200ce9d2d73fcb92c62de80d3bd7871b2872fc6e6938a3a2f14",
+      "labels_sha256": "2760155307e7ff05afd94f0705046cb2ad6fd5ae12f4c35c6adb7b077a20252e",
+      "schema_sha256": "3f40c013870557179638059dfdb2255887642bd6f2411d587a65db6fa3fabc11",
+      "settings": {
+        "image_detail": "low",
+        "max_image_edge": 768,
+        "max_output_tokens": 1200,
+        "context_sent": "optional label.context only"
+      },
+      "completed": true,
+      "metrics": {
+        "attempted_images": 10,
+        "successful_response_rate": {
+          "correct": 9,
+          "total": 10,
+          "rate": 0.9
+        },
+        "food_photo_accuracy": {
+          "correct": 9,
+          "total": 10,
+          "rate": 0.9
+        },
+        "nonfood_rejection_rate": {
+          "correct": 0,
+          "total": 0,
+          "rate": null
+        },
+        "food_name_recall": {
+          "correct": 7,
+          "total": 10,
+          "rate": 0.7
+        },
+        "food_name_precision": {
+          "correct": 7,
+          "total": 9,
+          "rate": 0.7778
+        },
+        "food_name_f1": 0.7368,
+        "count_and_unit_accuracy": {
+          "correct": 0,
+          "total": 0,
+          "rate": null
+        },
+        "category_hint_accuracy": {
+          "correct": 0,
+          "total": 0,
+          "rate": null
+        },
+        "snack_count_and_unit_accuracy": {
+          "correct": 0,
+          "total": 0,
+          "rate": null
+        },
+        "fast_sugar_detection_accuracy": {
+          "correct": 0,
+          "total": 0,
+          "rate": null
+        },
+        "fast_sugar_positive_recall": {
+          "correct": 0,
+          "total": 0,
+          "rate": null
+        },
+        "fast_sugar_negative_accuracy": {
+          "correct": 0,
+          "total": 0,
+          "rate": null
+        },
+        "median_success_latency_ms": 3892,
+        "median_attempt_latency_ms": 4075,
+        "reported_input_tokens": 13290,
+        "reported_output_tokens": 2443
+      },
+      "cases": [
+        {
+          "expected_names": [
+            "갈비구이"
+          ],
+          "predicted_names": [
+            "닭구이"
+          ],
+          "image_sha256": "7e5259265ff58ad49c9b65280d6e7af6e5e33c9286736b3d0c29234eabecc89a",
+          "latency_ms": 4258,
+          "error_code": null,
+          "prediction": {
+            "is_food_photo": true,
+            "items": [
+              {
+                "name": "닭구이",
+                "count": null,
+                "unit": "개",
+                "category_hint": "MEAL",
+                "tags": [],
+                "packaged_product": null,
+                "confidence": "medium"
+              }
+            ],
+            "likely_consumed_all": null
+          },
+          "meta": {
+            "model": "gpt-6-luna",
+            "latency_ms": 4193,
+            "input_tokens": 1480,
+            "output_tokens": 243
+          }
+        },
+        {
+          "expected_names": [
+            "갈비탕"
+          ],
+          "predicted_names": [
+            "갈비탕"
+          ],
+          "image_sha256": "b56e68f89091d6a0ea69e49e6e60ff18234c35eff24441e48f2e6554327bda16",
+          "latency_ms": 3892,
+          "error_code": null,
+          "prediction": {
+            "is_food_photo": true,
+            "items": [
+              {
+                "name": "갈비탕",
+                "count": null,
+                "unit": "그릇",
+                "category_hint": "MEAL",
+                "tags": [
+                  "HIGH_CARB"
+                ],
+                "packaged_product": null,
+                "confidence": "medium"
+              }
+            ],
+            "likely_consumed_all": null
+          },
+          "meta": {
+            "model": "gpt-6-luna",
+            "latency_ms": 3880,
+            "input_tokens": 1480,
+            "output_tokens": 339
+          }
+        },
+        {
+          "expected_names": [
+            "갈치구이"
+          ],
+          "predicted_names": [
+            "생선구이"
+          ],
+          "image_sha256": "837ede231e013de8f06352b067b07ffd1f3e1128e984600a015064796ffcde63",
+          "latency_ms": 3286,
+          "error_code": null,
+          "prediction": {
+            "is_food_photo": true,
+            "items": [
+              {
+                "name": "생선구이",
+                "count": null,
+                "unit": "개",
+                "category_hint": "MEAL",
+                "tags": [],
+                "packaged_product": null,
+                "confidence": "high"
+              }
+            ],
+            "likely_consumed_all": null
+          },
+          "meta": {
+            "model": "gpt-6-luna",
+            "latency_ms": 3280,
+            "input_tokens": 1480,
+            "output_tokens": 181
+          }
+        },
+        {
+          "expected_names": [
+            "김밥"
+          ],
+          "predicted_names": [
+            "김밥"
+          ],
+          "image_sha256": "0b2361827adefe70be916bfabbadc2d2cbaf57b93378afb436f81475fc822e1c",
+          "latency_ms": 2339,
+          "error_code": null,
+          "prediction": {
+            "is_food_photo": true,
+            "items": [
+              {
+                "name": "김밥",
+                "count": null,
+                "unit": "개",
+                "category_hint": "MEAL",
+                "tags": [
+                  "HIGH_CARB"
+                ],
+                "packaged_product": null,
+                "confidence": "high"
+              }
+            ],
+            "likely_consumed_all": null
+          },
+          "meta": {
+            "model": "gpt-6-luna",
+            "latency_ms": 2334,
+            "input_tokens": 1485,
+            "output_tokens": 140
+          }
+        },
+        {
+          "expected_names": [
+            "김치찌개"
+          ],
+          "predicted_names": [
+            "김치찌개"
+          ],
+          "image_sha256": "5f633503de069ce4f4778df25daba016b83b06bed8b71916be92528e11fe337b",
+          "latency_ms": 2057,
+          "error_code": null,
+          "prediction": {
+            "is_food_photo": true,
+            "items": [
+              {
+                "name": "김치찌개",
+                "count": null,
+                "unit": "그릇",
+                "category_hint": "MEAL",
+                "tags": [],
+                "packaged_product": null,
+                "confidence": "high"
+              }
+            ],
+            "likely_consumed_all": null
+          },
+          "meta": {
+            "model": "gpt-6-luna",
+            "latency_ms": 2044,
+            "input_tokens": 1480,
+            "output_tokens": 125
+          }
+        },
+        {
+          "expected_names": [
+            "된장찌개"
+          ],
+          "predicted_names": [
+            "된장찌개"
+          ],
+          "image_sha256": "7ce681b3358f0be08a6fdb74c28bb955ae849ce2a234a33b0c7fdd366c9ee533",
+          "latency_ms": 2596,
+          "error_code": null,
+          "prediction": {
+            "is_food_photo": true,
+            "items": [
+              {
+                "name": "된장찌개",
+                "count": null,
+                "unit": "그릇",
+                "category_hint": "MEAL",
+                "tags": [],
+                "packaged_product": null,
+                "confidence": "medium"
+              }
+            ],
+            "likely_consumed_all": null
+          },
+          "meta": {
+            "model": "gpt-6-luna",
+            "latency_ms": 2590,
+            "input_tokens": 1431,
+            "output_tokens": 169
+          }
+        },
+        {
+          "expected_names": [
+            "만두"
+          ],
+          "predicted_names": [
+            "만두"
+          ],
+          "image_sha256": "eee7e8e381c40706497f4db6017ac7a3a25722969419e130d8cc9a1f1f1eff21",
+          "latency_ms": 4597,
+          "error_code": null,
+          "prediction": {
+            "is_food_photo": true,
+            "items": [
+              {
+                "name": "만두",
+                "count": null,
+                "unit": "개",
+                "category_hint": "MEAL",
+                "tags": [
+                  "HIGH_CARB"
+                ],
+                "packaged_product": null,
+                "confidence": "high"
+              }
+            ],
+            "likely_consumed_all": null
+          },
+          "meta": {
+            "model": "gpt-6-luna",
+            "latency_ms": 4592,
+            "input_tokens": 1456,
+            "output_tokens": 298
+          }
+        },
+        {
+          "expected_names": [
+            "새우튀김"
+          ],
+          "predicted_names": [
+            "새우튀김"
+          ],
+          "image_sha256": "ff773274ea703a6c287ecc88d0a9f11e38119b0a3ac8780a174a839cc9da83b0",
+          "latency_ms": 4762,
+          "error_code": null,
+          "prediction": {
+            "is_food_photo": true,
+            "items": [
+              {
+                "name": "새우튀김",
+                "count": null,
+                "unit": "개",
+                "category_hint": "MEAL",
+                "tags": [
+                  "HIGH_FAT",
+                  "HIGH_CARB"
+                ],
+                "packaged_product": null,
+                "confidence": "high"
+              }
+            ],
+            "likely_consumed_all": null
+          },
+          "meta": {
+            "model": "gpt-6-luna",
+            "latency_ms": 4757,
+            "input_tokens": 1499,
+            "output_tokens": 210
+          }
+        },
+        {
+          "expected_names": [
+            "식혜"
+          ],
+          "predicted_names": [
+            "식혜"
+          ],
+          "image_sha256": "be7de024251dab9c2000000011e648b4ab56a8da9171a91f210fe03e7cf5eb11",
+          "latency_ms": 7440,
+          "error_code": null,
+          "prediction": {
+            "is_food_photo": true,
+            "items": [
+              {
+                "name": "식혜",
+                "count": null,
+                "unit": "잔",
+                "category_hint": "DRINK",
+                "tags": [],
+                "packaged_product": null,
+                "confidence": "medium"
+              }
+            ],
+            "likely_consumed_all": null
+          },
+          "meta": {
+            "model": "gpt-6-luna",
+            "latency_ms": 7437,
+            "input_tokens": 1499,
+            "output_tokens": 738
+          }
+        },
+        {
+          "expected_names": [
+            "약과"
+          ],
+          "predicted_names": [],
+          "image_sha256": "fae3a04342b365fec0647f9d4bc27f90f4db2138f29f0377f96c7bbdaa0e883e",
+          "latency_ms": 20011,
+          "error_code": "TIMEOUT",
+          "prediction": null,
+          "meta": null
+        }
+      ]
     }
   ]
 }
