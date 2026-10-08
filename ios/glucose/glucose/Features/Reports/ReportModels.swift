@@ -55,6 +55,18 @@ struct DailyReport: Decodable {
     }
 }
 
+struct WeeklyReport: Decodable {
+    let weekStart: String
+    let weekEnd: String
+    let daysWithData: Int
+    let daysInsufficient: Int
+    /// 그래프가 있는 날들의 일평균을 다시 평균낸 값. 그래프가 하나도 없으면 nil
+    let averageGlucose: Double?
+    let episodesCount: Int
+    let reboundCount: Int
+    let insulinEventsCount: Int
+}
+
 struct GlucoseReadings: Decodable {
     let date: String
     let coverageRatio: Double?

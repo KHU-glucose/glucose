@@ -9,7 +9,7 @@
 import SwiftUI
 
 struct DailyReportView: View {
-    @State private var viewModel = DailyReportViewModel()
+    let viewModel: DailyReportViewModel
     @State private var showGraphUpload = false
 
     var body: some View {
@@ -246,6 +246,6 @@ private struct EpisodeRow: View {
 
 #Preview {
     NavigationStack {
-        DailyReportView()
+        DailyReportView(viewModel: DailyReportViewModel())
     }
 }
