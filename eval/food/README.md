@@ -1,6 +1,6 @@
 # 음식 인식 평가
 
-현재 실제 사진은 없습니다. `labels.example.json`은 형식 예시이며 평가 데이터가 아닙니다.
+실제 사진과 정답은 로컬에만 보관합니다. `labels.example.json`은 형식 예시이며 평가 데이터가 아닙니다.
 AI가 생성한 정답 대신, 사진을 확인한 사람이 음식명·개수 정답을 먼저 작성하세요.
 
 ## 준비
@@ -26,7 +26,8 @@ AI가 생성한 정답 대신, 사진을 확인한 사람이 음식명·개수 �
 ]
 ```
 
-`count`를 셀 수 없으면 null 또는 생략하고 개수 평가에서 제외합니다. 개수가 있으면
+식사류(MEAL)는 음식명만 평가하고 `count=null`로 둡니다. 간식 개수를 셀 수 없으면
+null 또는 생략하고 개수 평가에서 제외합니다. 개수가 있으면
 `unit`도 필요합니다. `aliases`에 미리 허용한 동의어를 넣을 수 있습니다. 예: 흰쌀밥의
 동의어 쌀밥. 의미가 다른 음식명은 동의어로 추가하지 마세요. 정답과 동의어는 실행 후
 점수를 올리기 위해 바꾸지 말고, 정답 오류 수정은 별도 기록으로 남겨야 합니다.
@@ -75,6 +76,78 @@ python ml-service/eval_food.py --limit 10
 
 사진, 실제 정답 파일, 보고서는 Git에서 제외했습니다. example과 평가 코드만 공유합니다.
 
+## 프롬프트 전후 비교와 완료 기준
+
+프롬프트 원문은 [food_prompts.py](../../ml-service/food_prompts.py)에 버전별로 보관합니다.
+`baseline-v1`은 기존 평가의 원문, `rules-v2`는 상세 규칙 실험,
+`examples-v3`는 핵심 규칙과 짧은 정책 예시 실험입니다. `focused-v4`는 대표 요리명
+선택 문단만 교체했고, `contrast-v5`는 v3의 이름 선택 문단에 시각적 구별 단서만 추가했습니다.
+사진 예시를 학습시킨 것은 아닙니다.
+실제 서비스 기본 버전은 `ACTIVE_PROMPT_VERSION`을 확인하세요.
+추가 반복 평가에서 v4의 향상은 입증되지 않아 현재 기본값은 v3로 유지했습니다.
+[추가 실험 증빙](evidence/prompt-refinement-2026-10-07.json)을 함께 확인하세요.
+
+```powershell
+python ml-service/eval_food.py --prompt-version baseline-v1 --limit 10
+python ml-service/eval_food.py --prompt-version rules-v2 --limit 10
+python ml-service/eval_food.py --prompt-version examples-v3 --limit 10
+python ml-service/eval_food.py --prompt-version focused-v4 --limit 10
+python ml-service/eval_food.py --prompt-version contrast-v5 --limit 10
+```
+
+각 실행은 API 사용료가 발생합니다. 같은 정답·사진·모델·detail·축소 크기·출력 스키마를
+유지하고 프롬프트만 비교하세요. 프롬프트를 수정한 뒤에는 새 버전 이름을 사용하며,
+이미 실행한 버전 원문과 결과 파일은 덮어쓰지 않습니다. 보고서에는 프롬프트 원문과 버전,
+프롬프트·스키마·정답·원본 사진 해시, 설정, 각 응답, 처리 시간과 토큰 수가 기록됩니다.
+이전 10장을 개선에 참고했다면 개발용 데이터이며, 최종 성능은 별도 미사용 사진으로 검증합니다.
+
+| 계약서 목표 | 현재 측정 방법 |
+| --- | --- |
+| 음식 이름 85% | `food_name_recall`: 정답 음식명과 사전에 정한 동의어 일치. precision/F1도 함께 보고 오검출 확인 |
+| 낱개 개수 80% | `snack_count_and_unit_accuracy`: 정답 분류가 SNACK/FAST_SUGAR인 음식의 이름·개수·단위 모두 일치 |
+| 처치 음식 구분 95% | `fast_sugar_detection_accuracy`: 음식명이 맞고 FAST_SUGAR 여부도 맞는 비율. 양성 recall·음성 정확도도 별도 기록 |
+| 비음식 거르기 95% | `nonfood_rejection_rate`: false와 빈 items를 모두 반환 |
+| 스키마 통과 99% | 아직 순수 통과율 미계측. `successful_response_rate`는 스키마를 만족한 최종 응답 비율이며 API 실패도 분모에 포함 |
+| 응답 중앙값 3초 이하 | `median_attempt_latency_ms`: 실패·재시도 포함, 이미지 준비부터 최종 결과까지. HTTP 인증·네트워크·큐 대기는 제외 |
+| 장당 $0.003 이하 목표 | 토큰 합계만 측정. 실패·재시도·캐시·단가를 포함한 실제 청구 비용은 별도 확인 |
+
+FAST_SUGAR는 계약서의 기록용 분류입니다. 사탕·주스·초콜릿·젤리·포도당 식별이
+의학적 치료 적합성을 뜻하지는 않습니다. 예상 라벨에 분류가 없거나 양성/음성 중 한쪽이
+없으면 이 기준을 통과한 것으로 취급하지 않습니다. 미측정 항목은 자동 PASS가 아닙니다.
+
+계약서의 데이터 구성은 한식 식사 25, 간식 15, 처치 음식 20, 포장 식품 10,
+비음식 10 이상입니다. 총량은 60~100장이지만 그룹을 배타적으로 구성하면 최소 80장입니다.
+이 도구는 보수적으로 배타적 `dataset_group`을 사용합니다. 그룹은 MEAL/SNACK/HYPO/PACKAGED/NONFOOD 중 하나로,
+포장 간식은 그 사진을 어느 그룹에 배정할지 미리 결정하세요. 이는 음식의 `category_hint`와 별개입니다.
+`annotation_complete=true`는 해당 사진의 모든 보이는 음식에 정답을 작성했다는 뜻이며,
+폴더 이름으로 주된 음식만 라벨링한 사진에는 설정하지 않습니다.
+
+```json
+{
+  "file": "cookie.jpg", "is_food_photo": true,
+  "dataset_group": "SNACK", "annotation_complete": true,
+  "items": [{"name": "쿠키", "count": 3, "unit": "개", "category_hint": "SNACK"}]
+}
+```
+
+`make eval`은 위 목표와 데이터 조건을 확인하며 미달·미측정이면 종료 코드 1입니다.
+실행은 완료됐지만 목표에 못 미친 경우도 보고서는 보존됩니다. 기본은 개발용 비교입니다.
+
+```text
+make eval PROMPT=examples-v3 LIMIT=100 SPLIT=holdout
+```
+
+Windows에 make가 없으면 같은 평가를 다음처럼 실행합니다.
+
+```powershell
+python ml-service/eval_food.py --prompt-version examples-v3 --limit 100 --split holdout --require-targets
+```
+
+`--split holdout`은 실제로 튜닝에 사용하지 않은 사진을 넣었을 때만 지정하세요. 플래그만
+바꾼다고 검증용 데이터가 되는 것은 아닙니다. 현재 스키마 순수 통과율과 실제 청구 비용은
+자동 계측되지 않아 `completion_passed`는 완전한 완료 판정을 내릴 수 없습니다.
+결과가 좋은 10장만으로 최종 목표 달성을 주장하지 않습니다. 그래프 파싱 평가는 이 도구 범위 밖입니다.
+
 ## 사진 수집
 
 처음 10장은 식사 3장, 간식 2장, 사탕·초콜릿·주스 등 3장, 비음식 2장으로 시작하세요.
@@ -90,12 +163,3 @@ python ml-service/eval_food.py --limit 10
 
 공개 데이터셋의 음식 분류 라벨은 우리 개수·단위 정답과 같지 않으므로 직접 보완해야 합니다.
 공개 인터넷 사진만으로 얻은 점수가 새로 촬영한 실제 사진 성능을 보장하지는 않습니다.
-
-
-## 프롬프트 버전 보존과 비교
-
-현재 후보: baseline-v1, rules-v2, examples-v3, focused-v4. 기본값: examples-v3.
-원문은 food_prompts.py에 보존하며 --prompt-version으로 선택합니다.
-평가에는 프롬프트 원문·해시·사진·스키마·설정을 기록합니다.
-make eval은 기존 완료 목표와 데이터 조건을 검사하며 미측정은 통과로 취급하지 않습니다.
-개발용 10장의 결과는 최종 정확도가 아니며, 새 후보를 추가했다고 성능 향상이 입증된 것은 아닙니다.

@@ -110,7 +110,13 @@ FOCUSED_V4 = EXAMPLES_V3.replace(V3_NAME_RULE, """- name은 한국어의 일반�
   시각적으로 구분할 수 없는 세부 종류만 상위 이름으로 답하고 confidence를 낮춥니다.""")
 
 
-PROMPTS = {'baseline-v1': BASELINE_V1, 'rules-v2': RULES_V2, 'examples-v3': EXAMPLES_V3, 'focused-v4': FOCUSED_V4}
+CONTRAST_V5 = EXAMPLES_V3.replace(V3_NAME_RULE, V3_NAME_RULE + """
+  비슷한 요리가 혼동되면 사진에 실제로 있는 구별 단서(윤곽, 뼈·껍질, 표면 질감, 국물,
+  면·곡물 모양)를 기준으로 선택합니다. 색 하나, 접시, 배경만으로 종류를 확정하지 않습니다.
+  식별된 음식은 익숙한 대표 요리명으로 답하고, 없는 특징을 가정해 더 구체적인 이름을 붙이지 않습니다.""")
+
+
+PROMPTS = {'baseline-v1': BASELINE_V1, 'rules-v2': RULES_V2, 'examples-v3': EXAMPLES_V3, 'focused-v4': FOCUSED_V4, 'contrast-v5': CONTRAST_V5}
 ACTIVE_PROMPT_VERSION = 'examples-v3'
 
 
