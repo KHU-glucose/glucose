@@ -53,7 +53,9 @@ AI_use_organize/               경진대회 제출용 AI 활용 기록 (건드�
 ## 현재 상태와 다음 할 일
 - 백엔드 완료(머지): A1, B0(`docs/backend-api.md`), B1(Sign in with Apple + JWT), B2(사진 업로드 R2 presigned URL), B3(job 워커 + ml-service 연동), B4(intake/insulin_event CRUD, `food_catalog` 시드, 음식 인식 결과 조회), B5(혈당 그래프 업로드·분석), B6(에피소드/반동 판정 `EpisodeAnalyzer`), B7(일일·주간 리포트). ml-service 실제 음식 인식 + 그래프 파서, 모델명 버그 수정(#20)도 머지됨.
 - iOS 완료(머지): I0(뼈대), I1(기록 화면), I2(Sign in with Apple), I3(사진 촬영), I4(R2 업로드), I5(인식 결과 확인·수정), I6(인슐린 기록), I7(기록 목록 Live 전환).
-- 진행: **상세 작업 순서는 `docs/backend-plan.md`**(백엔드), `ios-plan.md`(iOS, Downloads에 있던 원본). 다음은 iOS Phase 4(I8 그래프 업로드 → I9 일일 리포트 → I10 주간 리포트).
+- 진행: **상세 작업 순서는 `docs/backend-plan.md`**(백엔드), `ios-plan.md`(iOS, Downloads에 있던 원본). iOS Phase 4 구현 완료, PR 대기: I8 그래프 업로드(#26) → I9 일일 리포트(#28) → I10 주간 리포트(#29). 함께 필요한 백엔드: 그래프 실패 사유 구분(#25), 일일 리포트 인슐린 시각(#27). iOS 날짜 디코딩 수정(#30). 전부 landing PR #24 위라 #24부터 머지.
+- iOS 빌드 확인: 이 Mac에 Xcode 26.6이 있음(xcode-select는 CommandLineTools라 `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer`로 지정). `xcodebuild -scheme glucose -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build`. 시뮬레이터 런타임은 iOS 26.5뿐이라 iOS 17 동작은 직접 확인 못 함.
+- 미정: 로그인 화면 제목이 "글루코스"인데 확정된 앱 이름은 Glubee — 바꿀지 Dave 확인 필요.
 - **스택 PR 주의**: 아래 PR을 위 PR의 브랜치를 base로 쌓으면, 위 PR이 main에 머지된 뒤 아래 PR의 base를 main으로 바꾸지 않고 머지했을 때 main에 안 들어간다(#17~#19, #22~#23에서 실제로 발생 → landing PR로 복구). 저장소 설정 "Automatically delete head branches"를 켜면 GitHub가 자동으로 base를 옮겨준다.
 - Bundle ID는 `com.glubee.glubee`로 확정(앱 실제 이름 Glubee). `com.glucose.glucose`는 쓰지 않음 — 저장소/패키지명(`com.glucoselog`)은 그대로 유지.
 - 다음: 백엔드는 B8(레이트 리밋/OpenAPI/로그 점검/백업 복구 테스트, 병행 가능).
