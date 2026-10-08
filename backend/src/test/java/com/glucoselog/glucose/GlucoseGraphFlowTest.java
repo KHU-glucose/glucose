@@ -222,6 +222,34 @@ class GlucoseGraphFlowTest {
 
         ResponseEntity<Map> status = getStatus(accessToken, uploadId);
         assertThat(status.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+        assertThat(status.getBody().get("code")).isEqualTo("GRAPH_NOT_RECOGNIZED");
+    }
+
+    @Test
+    void ml_service가_TOO_LITTLE_DATA를_내리면_상태조회_코드도_구분된다() throws Exception {
+        mlServiceStatus = 422;
+        mlServiceBody = "{\"code\":\"TOO_LITTLE_DATA\",\"message\":\"곡선이 하루의 10% 미만입니다\"}";
+        String accessToken = login();
+        UUID uploadId = uploadAndComplete(accessToken);
+
+        runWorkerOnce();
+
+        ResponseEntity<Map> status = getStatus(accessToken, uploadId);
+        assertThat(status.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+        assertThat(status.getBody().get("code")).isEqualTo("GRAPH_TOO_LITTLE_DATA");
+    }
+
+    @Test
+    void 알려지지_않은_실패는_일반_GRAPH_PARSE_FAILED() throws Exception {
+        mlServiceStatus = 400;
+        mlServiceBody = "{\"code\":\"INVALID_IMAGE\",\"message\":\"이미지가 아닙니다\"}";
+        String accessToken = login();
+        UUID uploadId = uploadAndComplete(accessToken);
+
+        runWorkerOnce();
+
+        ResponseEntity<Map> status = getStatus(accessToken, uploadId);
+        assertThat(status.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
         assertThat(status.getBody().get("code")).isEqualTo("GRAPH_PARSE_FAILED");
     }
 
