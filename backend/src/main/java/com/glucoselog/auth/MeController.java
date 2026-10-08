@@ -8,20 +8,22 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.glucoselog.account.AccountDeletionService;
+
 @RestController
 @RequestMapping("/v1/me")
 public class MeController {
 
-    private final AuthService authService;
+    private final AccountDeletionService accountDeletionService;
 
-    public MeController(AuthService authService) {
-        this.authService = authService;
+    public MeController(AccountDeletionService accountDeletionService) {
+        this.accountDeletionService = accountDeletionService;
     }
 
     @DeleteMapping
     public ResponseEntity<Void> deleteMe(Authentication authentication) {
         UUID userId = (UUID) authentication.getPrincipal();
-        authService.deleteAccount(userId);
+        accountDeletionService.deleteAccount(userId);
         return ResponseEntity.noContent().build();
     }
 }

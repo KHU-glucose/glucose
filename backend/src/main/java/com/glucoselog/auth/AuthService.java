@@ -64,11 +64,6 @@ public class AuthService {
         return issueTokenPair(stored.getUserId());
     }
 
-    @Transactional
-    public void deleteAccount(UUID userId) {
-        appUserRepository.deleteById(userId);
-    }
-
     private TokenPair issueTokenPair(UUID userId) {
         String accessToken = jwtService.issueAccessToken(userId);
         String rawRefreshToken = jwtService.generateRefreshToken();

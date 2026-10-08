@@ -108,6 +108,12 @@ Apple이 발급한 identity token을 검증해 `app_user`를 upsert하고 자체
 
 응답: `204 No Content`. 이후 해당 access/refresh 토큰은 모두 무효가 된다.
 
+삭제 범위:
+- **즉시 (요청 안에서)**: DB의 사용자·기록·사진 정보·인슐린·혈당 데이터 전부(`app_user` cascade), 사진·그래프에 연결된 인식/분석 job 기록.
+- **곧바로 비동기로**: R2에 올라간 사진·그래프 파일. 같은 트랜잭션에서 `USER_STORAGE_PURGE` job을 넣고 워커가
+  `photos/{userId}/`, `graphs/{userId}/` 경로를 통째로 지운다(업로드만 하고 완료 안 한 파일 포함). 실패하면 재시도한다.
+- **남는 것**: 매일 새벽 DB 백업(R2, 30일 보관)에는 삭제 전 데이터가 백업 보관 기간 동안 남는다. 개인정보 처리 안내에 적어야 한다.
+
 ## 8. `POST /v1/photos` — 사진 업로드 시작 (B2)
 
 R2(S3 호환) presigned PUT URL을 발급한다. **앱이 이 URL로 R2에 직접 업로드하며, 서버는 바이트를 중계하지 않는다.**
