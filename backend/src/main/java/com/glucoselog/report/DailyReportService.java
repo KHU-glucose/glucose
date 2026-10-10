@@ -28,21 +28,28 @@ public class DailyReportService {
     private final EpisodeReportService episodeReportService;
     private final InsulinEventRepository insulinEventRepository;
     private final EducationCardRepository educationCardRepository;
+    private final ReportProperties properties;
+    private final ReportSummaryBuilder summaryBuilder;
 
     public DailyReportService(
             GlucoseTimelineService timelineService,
             EpisodeReportService episodeReportService,
             InsulinEventRepository insulinEventRepository,
-            EducationCardRepository educationCardRepository) {
+            EducationCardRepository educationCardRepository,
+            ReportProperties properties,
+            ReportSummaryBuilder summaryBuilder) {
         this.timelineService = timelineService;
         this.episodeReportService = episodeReportService;
         this.insulinEventRepository = insulinEventRepository;
         this.educationCardRepository = educationCardRepository;
+        this.properties = properties;
+        this.summaryBuilder = summaryBuilder;
     }
 
     public DailyReportResponse getDailyReport(UUID userId, LocalDate date) {
         Optional<GlucoseTimelineService.DaySummary> daySummary = timelineService.findDaySummary(userId, date);
-        DailyReportResponse.GlucoseSummary glucoseSummary = daySummary.map(DailyReportService::summarize).orElse(null);
+        DailyReportResponse.GlucoseSummary glucoseSummary =
+                daySummary.map(summary -> summarize(summary, properties.sufficientCoverageRatio())).orElse(null);
 
         List<EpisodeSummary> episodes = episodeReportService.buildEpisodes(userId, date);
 
@@ -64,15 +71,18 @@ public class DailyReportService {
             educationCards.addAll(cardsFor(EducationCardTrigger.REBOUND));
         }
 
+        List<String> summary = summaryBuilder.daily(glucoseSummary, episodes, insulinEvents.size());
+
         return new DailyReportResponse(
-                date, glucoseSummary, episodes, insulinEvents.size(), insulinEvents, educationCards);
+                date, glucoseSummary, episodes, insulinEvents.size(), insulinEvents, educationCards, summary);
     }
 
     private List<EducationCardResponse> cardsFor(EducationCardTrigger trigger) {
         return educationCardRepository.findByTrigger(trigger).stream().map(EducationCardResponse::from).toList();
     }
 
-    private static DailyReportResponse.GlucoseSummary summarize(GlucoseTimelineService.DaySummary summary) {
+    private static DailyReportResponse.GlucoseSummary summarize(
+            GlucoseTimelineService.DaySummary summary, BigDecimal sufficientCoverageRatio) {
         List<Integer> values = summary.samples().stream()
                 .map(GlucoseSample::value)
                 .filter(Objects::nonNull)
@@ -85,6 +95,10 @@ public class DailyReportService {
         Integer min = values.isEmpty() ? null : Collections.min(values);
         Integer max = values.isEmpty() ? null : Collections.max(values);
 
-        return new DailyReportResponse.GlucoseSummary(summary.coverageRatio(), average, min, max, values.size());
+        boolean sufficient = summary.coverageRatio() != null
+                && summary.coverageRatio().compareTo(sufficientCoverageRatio) >= 0;
+
+        return new DailyReportResponse.GlucoseSummary(
+                summary.coverageRatio(), average, min, max, values.size(), sufficient);
     }
 }
