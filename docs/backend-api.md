@@ -311,7 +311,7 @@ API는 없다. `EpisodeAnalyzer`(순수 함수)만 있고, 리포트(B7)가 실�
 ```json
 {
   "date": "2026-10-01",
-  "glucose": { "coverage_ratio": 0.94, "average": 142.3, "min": 68, "max": 210, "readings_count": 90 },
+  "glucose": { "coverage_ratio": 0.94, "average": 142.3, "min": 68, "max": 210, "readings_count": 90, "sufficient": true },
   "episodes": [
     {
       "start_at": "2026-10-01T09:00:00Z",
@@ -325,10 +325,18 @@ API는 없다. `EpisodeAnalyzer`(순수 함수)만 있고, 리포트(B7)가 실�
   ],
   "insulin_events_count": 1,
   "insulin_events": [ { "occurred_at": "2026-10-01T09:05:00Z", "units": 3, "kind": "처치" } ],
-  "education_cards": [ { "trigger": "REBOUND", "title": "...", "body": "..." } ]
+  "education_cards": [ { "trigger": "REBOUND", "title": "...", "body": "..." } ],
+  "summary": [
+    "이 날 혈당 그래프의 94%를 읽었어요.",
+    "읽힌 값 90개 기준, 평균 142.3, 최저 68, 최고 210 mg/dL예요.",
+    "18:00 저혈당 처치 기록이 있어요."
+  ]
 }
 ```
 - `glucose`가 `null`이면 그날 분석 완료된 그래프가 없다 — **판단 불가**.
+- `glucose.sufficient`는 **기록 충분성**이다: `coverage_ratio >= report.sufficient-coverage-ratio`(기본 0.7)이면 `true`.
+  우리 앱의 기록 상태 표시일 뿐 혈당이 좋다/나쁘다는 평가가 아니고, 의학적 데이터 충분성 기준(예: 14일·70%)과도 다르다.
+  임계값 0.7은 임시 제품 기준이며 운영 coverage 분포를 보고 조정한다(2026-10-10 결정).
 - 에피소드의 `auto_reclassified`/`rebound_detected`가 `null`이면 "확인해봤더니 아니다"가 아니라
   **그 시점에 쓸 글루코스 데이터가 없어서 판단 자체를 못 했다**는 뜻이다(`false`와 다르다).
 
@@ -343,10 +351,68 @@ API는 없다. `EpisodeAnalyzer`(순수 함수)만 있고, 리포트(B7)가 실�
   "average_glucose": 138.2,
   "episodes_count": 12,
   "rebound_count": 2,
-  "insulin_events_count": 10
+  "insulin_events_count": 10,
+  "sufficient_days": 4,
+  "low_coverage_days": 1,
+  "pending_days": 0,
+  "summary": [ "이번 주는 4일 충분히 읽혔고, 1일은 일부만 읽혔어요. 2일은 올라온 그래프가 없어요." ]
 }
 ```
-같은 데이터로 다시 호출하면 항상 같은 숫자가 나온다(캐시하지 않고 매번 다시 계산).
+- `days_with_data`: 그래프가 있는 날 수(오늘 포함). `days_insufficient`: **오늘 이전**인데 그래프가 없는 날 수.
+  이전에는 `7 - days_with_data`라 아직 오지 않은 날도 포함됐지만, 이제는 제외한다(지난 주의 값은 변하지 않는다).
+- `sufficient_days` / `low_coverage_days`: 오늘 이전 날 중 그래프가 있고 각각 기록 충분(`glucose.sufficient=true`) / 부족인 날 수.
+- `pending_days`: 오늘 및 이후 날 수(집계 중). 충분/부족/누락 어디에도 세지 않는다.
+- 주간 전체에 대한 충분/부족 라벨은 두지 않는다. 일수만 보여주고, "좋은 날/아쉬운 날" 같은 혈당 평가는 하지 않는다.
+- `average_glucose`는 일평균들의 단순 평균이 아니라 **읽힌 값 개수(`readings_count`)로 가중한 평균**이다(일평균은 소수 첫째 자리로 반올림된 값이라 약간의 오차가 있을 수 있다).
+같은 데이터로 다시 호출하면 항상 같은 숫자가 나온다(캐시하지 않고 매번 다시 계산. 단 "오늘"이 바뀌면 `pending_days` 등이 달라진다).
+
+### 본인용 `summary` (일일·주간 공통)
+`summary`는 서버가 **고정 문장 틀**에 계산된 사실만 채운 문장 목록이다. AI가 쓰지 않는다. 읽힌 비율·값 개수·
+기록 건수·분류·관찰 사실(그래프 상단에 닿는 값이 읽혔는지)과 한계만 말하고, 원인 설명·평가·조언·안심 문구·
+인슐린 용량은 넣지 않는다(`medical-info-policy.md` 4장). 읽힌 값이 없으면 "없다/확인하지 못했다"고 쓰고 "없었다"고
+쓰지 않는다. 클라이언트는 이 문장을 그대로 표시하고 의학 판단을 다시 계산하지 않는다. 문구는 팀 검토 전 초안이며
+의료인 검토를 받지 않았다.
+
+### `GET /v1/reports/clinician?from=YYYY-MM-DD&to=YYYY-MM-DD` — 의료인 공유용 리포트
+진료 때 의료인과 기록을 함께 볼 수 있게 **사실과 데이터의 한계만** 정리한다. 진단·소견·평가·조언·교육 카드는 없다.
+기간은 한국 시간 날짜로 양끝 포함, 최대 31일. `from`이 `to`보다 늦으면 400 `INVALID_PERIOD`, 31일을 넘으면 400 `PERIOD_TOO_LONG`.
+```json
+{
+  "from": "2026-09-28", "to": "2026-10-04",
+  "generated_at": "2026-10-10T03:00:00Z",
+  "low_reading_threshold": 70,
+  "totals": {
+    "period_days": 7, "days_sufficient": 4, "days_low_coverage": 1, "days_no_graph": 2, "days_in_progress": 0,
+    "readings_count": 480, "average": 138.2, "min": 62, "max": 245,
+    "low_reading_count": 3, "above_range_count": 5, "below_range_count": 2,
+    "episodes_count": 12, "hypo_treatment_episodes_count": 3, "insulin_events_count": 10
+  },
+  "days": [
+    {
+      "date": "2026-09-28", "status": "SUFFICIENT", "coverage_ratio": 0.94,
+      "readings_count": 90, "missing_count": 6, "average": 142.3, "min": 62, "max": 210,
+      "low_reading_count": 1, "above_range_count": 2, "below_range_count": 0,
+      "low_readings": [ { "time": "2026-09-28T08:45:00Z", "value": 62, "flag": "NORMAL" } ],
+      "episodes": [
+        { "start_at": "2026-09-28T09:00:00Z", "entered_context": "SNACK", "effective_context": "HYPO_TREATMENT",
+          "auto_reclassified": true, "window_end_at": "2026-09-28T11:00:00Z", "above_range_observed": true, "intake_count": 1 }
+      ],
+      "insulin_events": [ { "occurred_at": "2026-09-28T09:05:00Z", "units": 3, "kind": "처치" } ]
+    }
+  ],
+  "notes": [ "사용자가 올린 혈당 그래프 이미지에서 읽은 추정값과 …", "…" ],
+  "disclaimer": "일반 정보이며 의료 조언이 아닙니다."
+}
+```
+- `day.status`: `SUFFICIENT`(coverage ≥ 설정 기준) / `LOW_COVERAGE` / `NO_GRAPH`(오늘 이전인데 그래프 없음) /
+  `IN_PROGRESS`(오늘 및 이후). 읽힌 값이 없으면 `average`/`min`/`max`는 `null`이다(0이 아님).
+- **낮은 값 기준**은 새로 만들지 않고 기존 `episode.hypo-glucose-threshold`를 그대로 쓴다(`low_reading_threshold`로 노출).
+  높은 쪽은 숫자 기준 없이 그래프 상단 플래그(`ABOVE_RANGE`)의 개수만 센다. 범위 내 시간(TIR)·변동계수(CV)는
+  이미지 추정값 검증 전이라 제공하지 않는다.
+- `above_range_observed`: 처치 뒤 관찰 구간에 그래프 상단에 닿는 값이 있었는지(`null`=읽힌 값이 없어 확인 불가).
+  기존 `rebound_detected`와 같은 계산이지만 원인을 암시하지 않는 이름을 쓴다. `entered_context`는 사용자가 입력한 분류다.
+- `notes`와 `disclaimer`는 서버가 고정해서 항상 붙인다(추정값임, 보간하지 않음, 경계 값 의미, 기록 시각의 한계).
+  문구는 팀 검토 전 초안이며 의료인 검토를 받지 않았다.
 
 ## 17. 앞으로 추가될 것 (문서 자리만 미리 잡아둠)
 

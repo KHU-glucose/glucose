@@ -72,6 +72,9 @@ r2:
   photo-bucket: ${R2_PHOTO_BUCKET:glucose-photos}
   presign-ttl-seconds: 600    # 10분
 
+report:
+  sufficient-coverage-ratio: 0.7  # 이 비율 이상 읽힌 날을 "기록 충분"으로 표시. 임시 제품 기준(의학 기준 아님), 운영 분포 보고 조정
+
 # CLAUDE.md 분석 규칙(에피소드/반동 판정). AI 없는 순수 함수의 파라미터 - 숫자를 코드에 박지 않고 여기서 조정한다
 episode:
   gap-minutes: 90             # 이 간격 이내의 섭취는 하나의 에피소드로 묶는다 (문서상 60~90분 중 상한값을 기본으로)
