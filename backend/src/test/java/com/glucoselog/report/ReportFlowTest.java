@@ -271,6 +271,19 @@ class ReportFlowTest {
     }
 
     @Test
+    void 의료인_공유용_리포트에_기간_파라미터가_없으면_500이_아니라_400이다() {
+        String token = login();
+
+        for (String query : new String[] {"", "?from=2026-10-01", "?to=2026-10-01"}) {
+            ResponseEntity<Map> response = rest.exchange(
+                    "/v1/reports/clinician" + query, HttpMethod.GET, new HttpEntity<>(authHeaders(token)), Map.class);
+
+            assertThat(response.getStatusCode()).as(query).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(response.getBody().get("code")).as(query).isEqualTo("VALIDATION_ERROR");
+        }
+    }
+
+    @Test
     void 의료인_공유용_리포트는_인증이_필요하다() {
         ResponseEntity<Map> response = rest.getForEntity(
                 "/v1/reports/clinician?from=2026-10-01&to=2026-10-01", Map.class);

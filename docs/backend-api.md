@@ -355,7 +355,7 @@ API는 없다. `EpisodeAnalyzer`(순수 함수)만 있고, 리포트(B7)가 실�
   "sufficient_days": 4,
   "low_coverage_days": 1,
   "pending_days": 0,
-  "summary": [ "이번 주는 4일 충분히 읽혔고, 1일은 일부만 읽혔어요. 2일은 올라온 그래프가 없어요." ]
+  "summary": [ "이 주는 4일 충분히 읽혔고, 1일은 일부만 읽혔어요. 2일은 올라온 그래프가 없어요." ]
 }
 ```
 - `days_with_data`: 그래프가 있는 날 수(오늘 포함). `days_insufficient`: **오늘 이전**인데 그래프가 없는 날 수.

@@ -66,7 +66,7 @@ public class ReportSummaryBuilder {
 
     public List<String> weekly(WeeklyReportResponse week) {
         List<String> lines = new ArrayList<>();
-        StringBuilder status = new StringBuilder("이번 주는 " + week.sufficientDays() + "일 충분히 읽혔고, "
+        StringBuilder status = new StringBuilder("이 주는 " + week.sufficientDays() + "일 충분히 읽혔고, "
                 + week.lowCoverageDays() + "일은 일부만 읽혔어요.");
         if (week.daysInsufficient() > 0) {
             status.append(" ").append(week.daysInsufficient()).append("일은 올라온 그래프가 없어요.");

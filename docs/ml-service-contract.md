@@ -231,7 +231,7 @@ ml-service (ml-service:8000, FastAPI)
 ```json
 {
   "paragraphs": [
-    { "text": "이번 주는 4일 충분히 읽혔고, 1일은 일부만 읽혔어요. 2일은 아직 집계 중이에요.",
+    { "text": "이 주는 4일 충분히 읽혔고, 1일은 일부만 읽혔어요. 2일은 아직 집계 중이에요.",
       "fact_ids": ["sufficient_days", "low_coverage_days", "pending_days"] }
   ],
   "model": "(사용한 모델 ID)",
