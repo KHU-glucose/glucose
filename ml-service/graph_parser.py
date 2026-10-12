@@ -11,7 +11,7 @@ import pytesseract
 from models import GraphGap, GraphParseMeta, GraphReading
 
 
-PARSER_VERSION = "1.0.0"
+PARSER_VERSION = "1.1.0"
 READING_COUNT = 96
 
 
@@ -117,80 +117,63 @@ class LibreDailyGraphParser:
     def _find_graph_bounds(image: np.ndarray) -> tuple[int, int, int, int]:
         height, width = image.shape[:2]
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        edges = cv2.Canny(gray, 50, 150)
-        lines = cv2.HoughLinesP(
-            edges,
-            1,
-            np.pi / 180,
-            threshold=max(40, width // 12),
-            minLineLength=max(80, int(width * 0.35)),
-            maxLineGap=max(10, int(width * 0.03)),
-        )
-        if lines is None:
-            raise GraphParseFailure(
-                "GRAPH_NOT_RECOGNIZED",
-                "그래프 격자선을 찾지 못했습니다",
-            )
+        # Gray grid strokes are distinct from black/white text and the glucose curve.
+        # Edge-based line detection can bridge the left labels into the grid.
+        neutral = np.ptp(image.astype(np.int16), axis=2) < 48
+        above = np.roll(gray, 3, axis=0).astype(np.int16)
+        below = np.roll(gray, -3, axis=0).astype(np.int16)
+        intensity = gray.astype(np.int16)
+        if float(np.median(gray)) < 128:
+            grid_pixels = (gray >= 45) & (gray <= 160) & neutral & (intensity > np.minimum(above, below) + 8)
+        else:
+            # Thin lines become very pale after resizing. Local contrast separates
+            # them from uniform white/green backgrounds without a low gray cutoff.
+            grid_pixels = (gray >= 110) & (gray <= 250) & neutral & (intensity < np.maximum(above, below) - 8)
+        mask = grid_pixels.astype(np.uint8) * 255
+        mask[: int(height * 0.15), :] = 0
+        mask[int(height * 0.90) :, :] = 0
+        # Keep long fragments, rather than bridging label-to-grid gaps. A curve
+        # may obscure part of a grid line, especially after JPEG downsampling.
+        kernel_width = max(15, round(width * 0.08)) | 1
+        horizontal = cv2.morphologyEx(mask, cv2.MORPH_OPEN, np.ones((1, kernel_width), np.uint8))
+        rows = np.flatnonzero(np.count_nonzero(horizontal, axis=1) >= width * 0.30)
+        groups = np.split(rows, np.flatnonzero(np.diff(rows) > 2) + 1)
+        grid_lines = []
+        for group in groups:
+            if not group.size:
+                continue
+            xs = np.flatnonzero(np.any(horizontal[group] > 0, axis=0))
+            grid_lines.append((round(float(np.median(group))), int(xs[0]), int(xs[-1])))
 
-        horizontal: list[tuple[int, int, int]] = []
-        y_tolerance = max(3, int(height * 0.006))
-        for raw_line in lines[:, 0]:
-            x1, y1, x2, y2 = (int(value) for value in raw_line)
-            if abs(y2 - y1) <= y_tolerance and y1 >= int(height * 0.15):
-                left, right = sorted((x1, x2))
+        # This parser's fixed 350..50 scale requires seven 50-mg/dL grid lines.
+        # Choose the first aligned, evenly spaced group of seven; an additional
+        # horizontal clock axis below the 50 line must not stretch the value scale.
+        candidates = np.asarray(grid_lines)
+        for start in range(len(grid_lines) - 6):
+            top = grid_lines[start][0]
+            for second in grid_lines[start + 1 :]:
+                step = second[0] - top
+                if step < 5 or step * 6 < height * 0.15:
+                    continue
+                targets = top + np.arange(7) * step
+                indices = [int(np.argmin(np.abs(candidates[:, 0] - y))) for y in targets]
+                grid = candidates[indices]
+                if len(set(indices)) != 7 or np.max(np.abs(grid[:, 0] - targets)) > max(2, step * 0.06):
+                    continue
+                # Upper lines are usually unobscured; lower ones may be broken
+                # by the glucose trace. Use the upper three to calibrate x.
+                left = round(float(np.median(grid[:3, 1])))
+                right = round(float(np.median(grid[:3, 2])))
+                if (np.max(np.abs(grid[:3, 1] - left)) > width * 0.03
+                        or np.max(np.abs(grid[:3, 2] - right)) > width * 0.03):
+                    continue
+                bottom = int(grid[-1, 0])
                 if right - left >= width * 0.35:
-                    horizontal.append(((y1 + y2) // 2, left, right))
-
-        if len(horizontal) < 3:
-            raise GraphParseFailure(
-                "GRAPH_NOT_RECOGNIZED",
-                "그래프 가로 격자선을 충분히 찾지 못했습니다",
-            )
-
-        horizontal.sort()
-        grouped: list[list[tuple[int, int, int]]] = []
-        for line in horizontal:
-            if not grouped or abs(line[0] - np.median([item[0] for item in grouped[-1]])) > y_tolerance:
-                grouped.append([line])
-            else:
-                grouped[-1].append(line)
-
-        grid_lines: list[tuple[int, int, int]] = []
-        for group in grouped:
-            y = round(float(np.median([item[0] for item in group])))
-            left = round(float(np.median([item[1] for item in group])))
-            right = round(float(np.median([item[2] for item in group])))
-            if right - left >= width * 0.35:
-                grid_lines.append((y, left, right))
-
-        if len(grid_lines) < 3:
-            raise GraphParseFailure(
-                "GRAPH_NOT_RECOGNIZED",
-                "그래프 격자 영역을 결정하지 못했습니다",
-            )
-
-        common_left = round(float(np.median([line[1] for line in grid_lines])))
-        common_right = round(float(np.median([line[2] for line in grid_lines])))
-        aligned = [
-            line
-            for line in grid_lines
-            if abs(line[1] - common_left) <= width * 0.12
-            and abs(line[2] - common_right) <= width * 0.12
-        ]
-        if len(aligned) < 3:
-            aligned = grid_lines
-
-        y_top = min(line[0] for line in aligned)
-        y_bottom = max(line[0] for line in aligned)
-        x_left = round(float(np.median([line[1] for line in aligned])))
-        x_right = round(float(np.median([line[2] for line in aligned])))
-
-        if x_right - x_left < width * 0.35 or y_bottom - y_top < height * 0.15:
-            raise GraphParseFailure(
-                "GRAPH_NOT_RECOGNIZED",
-                "그래프 영역의 크기가 올바르지 않습니다",
-            )
-        return x_left, y_top, x_right, y_bottom
+                    return left, top, right, bottom
+        raise GraphParseFailure(
+            "GRAPH_NOT_RECOGNIZED",
+            "50~350 mg/dL 그래프의 7개 격자선을 확인하지 못했습니다",
+        )
 
     def _extract_readings(
         self,
@@ -204,54 +187,30 @@ class LibreDailyGraphParser:
         plot = image[y_top : y_bottom + 1, x_left : x_right + 1]
         gray = cv2.cvtColor(plot, cv2.COLOR_BGR2GRAY)
         if float(np.median(gray)) < 128:
-            curve_candidates = cv2.threshold(gray, 165, 255, cv2.THRESH_BINARY)[1]
+            curve_pixels = gray > 165
         else:
-            curve_candidates = cv2.threshold(gray, 105, 255, cv2.THRESH_BINARY_INV)[1]
-
-        plot_height, plot_width = curve_candidates.shape
-        horizontal_kernel = cv2.getStructuringElement(
-            cv2.MORPH_RECT,
-            (max(15, plot_width // 8), 1),
-        )
-        vertical_kernel = cv2.getStructuringElement(
-            cv2.MORPH_RECT,
-            (1, max(15, plot_height // 5)),
-        )
-        grid_mask = cv2.bitwise_or(
-            cv2.morphologyEx(curve_candidates, cv2.MORPH_OPEN, horizontal_kernel),
-            cv2.morphologyEx(curve_candidates, cv2.MORPH_OPEN, vertical_kernel),
-        )
-        curve_mask = cv2.bitwise_and(curve_candidates, cv2.bitwise_not(grid_mask))
-        curve_mask = cv2.morphologyEx(
-            curve_mask,
-            cv2.MORPH_CLOSE,
-            cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3)),
-        )
-
-        edge_margin = max(2, int(min(plot_height, plot_width) * 0.008))
-        curve_mask[:edge_margin, :] = 0
-        curve_mask[-edge_margin:, :] = 0
-        curve_mask[:, :edge_margin] = 0
-        curve_mask[:, -edge_margin:] = 0
-
-        x_radius = max(2, round(plot_width / (READING_COUNT * 2)))
+            curve_pixels = gray < 105
+        blue, green, red = np.moveaxis(plot.astype(np.int16), 2, 0)
+        curve_pixels |= (red > 120) & (red - green > 60) & (red - blue > 60)
+        # Grid intensity is already excluded. Removing long horizontal strokes
+        # here would also erase genuine flat glucose plateaus.
+        plot_height, plot_width = curve_pixels.shape
+        edge_margin = max(1, round(plot_height * 0.002))
         readings: list[GraphReading] = []
-        previous_y: float | None = None
         for index in range(READING_COUNT):
-            x = round(index * (plot_width - 1) / (READING_COUNT - 1))
-            start = max(0, x - x_radius)
-            end = min(plot_width, x + x_radius + 1)
-            candidate_y, _ = np.where(curve_mask[:, start:end] > 0)
+            # The right axis is next-day 00:00. 23:45 lies at 95/96 of its span.
+            x = round(index * (plot_width - 1) / READING_COUNT)
+            candidate_y = np.flatnonzero(curve_pixels[:, x])
+            if index == 0 and not candidate_y.size and plot_width > 1:
+                # The exact left edge can be clipped to background by screenshot
+                # rasterization. Use its adjacent pixel, not a multi-minute window.
+                candidate_y = np.flatnonzero(curve_pixels[:, 1])
 
             value: int | None = None
             flag = "MISSING"
             if candidate_y.size:
-                if previous_y is None:
-                    y = float(np.median(candidate_y))
-                else:
-                    unique_y = np.unique(candidate_y)
-                    y = float(unique_y[np.argmin(np.abs(unique_y - previous_y))])
-                previous_y = y
+                runs = np.split(candidate_y, np.flatnonzero(np.diff(candidate_y) > 2) + 1)
+                y = float(np.median(max(runs, key=len)))
                 ratio = y / max(1, plot_height - 1)
                 raw_value = self.maximum_glucose - ratio * (
                     self.maximum_glucose - self.minimum_glucose
@@ -263,9 +222,6 @@ class LibreDailyGraphParser:
                     flag = "BELOW_RANGE"
                 else:
                     flag = "NORMAL"
-            else:
-                previous_y = None
-
             readings.append(
                 GraphReading(
                     time=self._time_for_index(index),
