@@ -11,7 +11,7 @@ import pytesseract
 from models import GraphGap, GraphParseMeta, GraphReading
 
 
-PARSER_VERSION = "1.1.0"
+PARSER_VERSION = "1.1.1"
 READING_COUNT = 96
 
 
@@ -195,6 +195,14 @@ class LibreDailyGraphParser:
         # Grid intensity is already excluded. Removing long horizontal strokes
         # here would also erase genuine flat glucose plateaus.
         plot_height, plot_width = curve_pixels.shape
+        occupied_heights = np.count_nonzero(curve_pixels, axis=0)
+        occupied_heights = occupied_heights[occupied_heights > 0]
+        # Use the image's own stroke thickness. Tiny endpoint caps / JPEG specks
+        # should not turn a gap into a reading; genuinely thin traces remain valid.
+        minimum_stroke_pixels = (
+            max(1, int(np.ceil(np.percentile(occupied_heights, 10) / 3)))
+            if occupied_heights.size else 1
+        )
         edge_margin = max(1, round(plot_height * 0.002))
         readings: list[GraphReading] = []
         for index in range(READING_COUNT):
@@ -210,7 +218,11 @@ class LibreDailyGraphParser:
             flag = "MISSING"
             if candidate_y.size:
                 runs = np.split(candidate_y, np.flatnonzero(np.diff(candidate_y) > 2) + 1)
-                y = float(np.median(max(runs, key=len)))
+                stroke = max(runs, key=len)
+                if len(stroke) < minimum_stroke_pixels:
+                    candidate_y = np.array([], dtype=int)
+            if candidate_y.size:
+                y = float(np.median(stroke))
                 ratio = y / max(1, plot_height - 1)
                 raw_value = self.maximum_glucose - ratio * (
                     self.maximum_glucose - self.minimum_glucose

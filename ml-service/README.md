@@ -55,6 +55,10 @@ python -m uvicorn main:app --app-dir ml-service --reload
 잘린 이미지나 다른 축 형식에는 `GRAPH_NOT_RECOGNIZED`를 반환합니다.
 CSV는 로컬 정확도 평가의 정답으로만 사용하며 실제 API 입력에 포함하지 않습니다.
 
+`1.1.1`은 공백 경계의 작은 선 끝·잡음을 곡선 두께 기준으로 걸러냅니다.
+그래프 API는 최대 변 2048픽셀 이하의 이미지를 원본 바이트로 읽고, 더 큰 이미지만
+축소해 PNG로 전달합니다. 음식 API의 768픽셀 전처리는 그대로 유지합니다.
+
 ## 테스트
 
 ```powershell

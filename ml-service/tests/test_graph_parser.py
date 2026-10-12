@@ -177,3 +177,24 @@ def test_incomplete_scale_is_rejected_instead_of_using_clock_as_grid_line():
     parser=LibreDailyGraphParser(date_reader=lambda _:'2026-10-01')
     with pytest.raises(GraphParseFailure,match='7개 격자선'):
         parser.parse(encoded(screenshot_graph(np.full(97,120),missing_grid=0)))
+
+
+def test_single_pixel_speck_in_gap_does_not_create_a_reading():
+    image = screenshot_graph(np.full(97,120),missing=(35,49))
+    x = round(120+42*(1080-120)/96)
+    image[500,x] = (0,0,0)
+    parser = LibreDailyGraphParser(date_reader=lambda _:'2026-10-01')
+    result = parser.parse(encoded(image))
+    assert result['readings'][42].value is None
+    assert all(r.value is None for r in result['readings'][35:49])
+
+
+@pytest.mark.parametrize('dark',[False,True])
+def test_genuinely_one_pixel_thin_curve_is_not_discarded(dark):
+    image = screenshot_graph(np.full(97,120),dark=dark,missing=(0,97))
+    color = (240,240,240) if dark else (20,20,20)
+    cv2.line(image,(120,588),(1080,588),color,1)
+    parser = LibreDailyGraphParser(date_reader=lambda _:'2026-10-01')
+    result = parser.parse(encoded(image))
+    assert result['coverage_ratio']==1
+    assert all(abs(r.value-120)<=2 for r in result['readings'])
