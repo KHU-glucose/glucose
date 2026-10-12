@@ -92,7 +92,7 @@ def test_dark_mode_graph_is_supported():
     assert result["gaps"]
 
 
-def screenshot_graph(values, *, dark=False, red_curve=False, missing=None, missing_grid=None):
+def screenshot_graph(values, *, dark=False, red_curve=False, missing=None, missing_grid=None, thickness=3):
     """Known numeric curve in a screenshot layout with labels and a clock axis."""
     background, grid, curve = (24, 85, 240) if dark else (255, 185, 20)
     image = np.full((800, 1200, 3), background, dtype=np.uint8)
@@ -110,14 +110,14 @@ def screenshot_graph(values, *, dark=False, red_curve=False, missing=None, missi
     for index, value in enumerate(values):
         if missing and missing[0] <= index < missing[1]:
             if len(points)>1:
-                cv2.polylines(image,[np.asarray(points)],False,color,3)
+                cv2.polylines(image,[np.asarray(points)],False,color,thickness)
             points=[]
             continue
         x=round(left+index*(right-left)/96)
         y=round(top+(350-value)/300*(bottom-top))
         points.append((x,y))
     if len(points)>1:
-        cv2.polylines(image,[np.asarray(points)],False,color,3)
+        cv2.polylines(image,[np.asarray(points)],False,color,thickness)
     return image
 
 
@@ -198,3 +198,59 @@ def test_genuinely_one_pixel_thin_curve_is_not_discarded(dark):
     result = parser.parse(encoded(image))
     assert result['coverage_ratio']==1
     assert all(abs(r.value-120)<=2 for r in result['readings'])
+
+
+@pytest.mark.parametrize('dark,red_curve', [(False,False), (True,False), (False,True)])
+@pytest.mark.parametrize('rising', [False,True])
+def test_thick_curve_at_steep_corner_tracks_center_path(dark,red_curve,rising):
+    values = np.full(97,230)
+    values[44] = 210
+    values[45:] = 125
+    values[45] = 130
+    if rising:
+        values = 350-values
+    parser = LibreDailyGraphParser(date_reader=lambda _:'2026-10-01')
+    result = parser.parse(encoded(screenshot_graph(values,dark=dark,red_curve=red_curve,thickness=13)))
+    # The known bend is at 11:15, not at the middle of the thick vertical span.
+    assert abs(result['readings'][45].value-int(values[45]))<=5
+    assert all(abs(result['readings'][i].value-int(values[i]))<=3 for i in [43,47,48])
+
+
+def test_thick_steep_curve_preserves_a_real_gap():
+    values = np.full(97,125)
+    values[32:35] = [230,180,130]
+    parser = LibreDailyGraphParser(date_reader=lambda _:'2026-10-01')
+    result = parser.parse(encoded(screenshot_graph(values,missing=(35,49),thickness=13)))
+    assert all(r.value is None for r in result['readings'][35:49])
+    assert result['readings'][34].value is not None
+    assert result['readings'][49].value is not None
+
+
+@pytest.mark.parametrize('dark,red_curve', [(False,False), (True,False), (False,True)])
+@pytest.mark.parametrize('valley', [False,True])
+def test_thick_peak_and_valley_recover_known_vertex(dark,red_curve,valley):
+    values = np.full(97,130)
+    values[39:50] = [130,150,170,190,210,230,210,190,170,150,130]
+    if valley:
+        values = 350-values
+    parser = LibreDailyGraphParser(date_reader=lambda _:'2026-10-01')
+    result = parser.parse(encoded(screenshot_graph(values,dark=dark,red_curve=red_curve,thickness=13)))
+    assert abs(result['readings'][44].value-int(values[44]))<=3
+    assert all(abs(result['readings'][i].value-int(values[i]))<=3 for i in [42,43,45,46])
+
+
+def test_empty_curve_reports_too_little_data():
+    parser = LibreDailyGraphParser(date_reader=lambda _:'2026-10-01')
+    with pytest.raises(GraphParseFailure) as error:
+        parser.parse(encoded(screenshot_graph(np.full(97,120),missing=(0,97))))
+    assert error.value.code=='TOO_LITTLE_DATA'
+
+
+def test_fractional_column_samples_a_linear_curve_at_the_requested_time():
+    image = np.full((800,1200,3),255,dtype=np.uint8)
+    left,top,right,bottom = 120,220,1093,700
+    cv2.line(image,(left,bottom),(right,top),(20,20,20),3)
+    readings = LibreDailyGraphParser()._extract_readings(
+        image,x_left=left,y_top=top,x_right=right,y_bottom=bottom)
+    # The 973-pixel span does not divide into 96 integer sample columns.
+    assert all(abs(r.value-(50+i*300/96))<=1 for i,r in enumerate(readings))

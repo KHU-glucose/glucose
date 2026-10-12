@@ -11,7 +11,7 @@ import pytesseract
 from models import GraphGap, GraphParseMeta, GraphReading
 
 
-PARSER_VERSION = "1.1.1"
+PARSER_VERSION = "1.1.3"
 READING_COUNT = 96
 
 
@@ -203,11 +203,28 @@ class LibreDailyGraphParser:
             max(1, int(np.ceil(np.percentile(occupied_heights, 10) / 3)))
             if occupied_heights.size else 1
         )
+        centerline = self._thin_curve_pixels(curve_pixels)
+        center_path = np.full(plot_width, np.nan)
+        for column in range(plot_width):
+            ys = np.flatnonzero(curve_pixels[:, column])
+            if not ys.size:
+                continue
+            runs = np.split(ys, np.flatnonzero(np.diff(ys) > 2) + 1)
+            stroke = max(runs, key=len)
+            centers = np.flatnonzero(centerline[:, column])
+            centers = centers[(centers >= stroke[0]) & (centers <= stroke[-1])]
+            center_path[column] = np.median(centers if centers.size else stroke)
+        stroke_radius = (
+            max(1.0, (float(np.percentile(occupied_heights, 10)) - 1) / 2)
+            if occupied_heights.size else 1.0
+        )
+        center_path = self._refine_curve_turns(center_path, curve_pixels, stroke_radius)
         edge_margin = max(1, round(plot_height * 0.002))
         readings: list[GraphReading] = []
         for index in range(READING_COUNT):
             # The right axis is next-day 00:00. 23:45 lies at 95/96 of its span.
-            x = round(index * (plot_width - 1) / READING_COUNT)
+            sample_x = index * (plot_width - 1) / READING_COUNT
+            x = round(sample_x)
             candidate_y = np.flatnonzero(curve_pixels[:, x])
             if index == 0 and not candidate_y.size and plot_width > 1:
                 # The exact left edge can be clipped to background by screenshot
@@ -222,7 +239,17 @@ class LibreDailyGraphParser:
                 if len(stroke) < minimum_stroke_pixels:
                     candidate_y = np.array([], dtype=int)
             if candidate_y.size:
-                y = float(np.median(stroke))
+                # A thick steep stroke can span many glucose values in one
+                # column, especially at a bend. Read its thinned center path.
+                # The original stroke still decides presence, so thinning never
+                # fills a gap or removes a valid endpoint from the response.
+                lower_x, upper_x = int(np.floor(sample_x)), int(np.ceil(sample_x))
+                if np.isfinite(center_path[lower_x]) and np.isfinite(center_path[upper_x]):
+                    fraction = sample_x - lower_x
+                    y = float(center_path[lower_x] * (1-fraction) + center_path[upper_x] * fraction)
+                else:
+                    # Do not interpolate across a missing image column.
+                    y = float(center_path[x] if np.isfinite(center_path[x]) else np.median(stroke))
                 ratio = y / max(1, plot_height - 1)
                 raw_value = self.maximum_glucose - ratio * (
                     self.maximum_glucose - self.minimum_glucose
@@ -242,6 +269,113 @@ class LibreDailyGraphParser:
                 )
             )
         return readings
+
+    @staticmethod
+    def _refine_curve_turns(path: np.ndarray, mask: np.ndarray, radius: float) -> np.ndarray:
+        """Recover sharp turns only when re-rendering better matches the image."""
+        refined = path.copy()
+        if radius <= 1:
+            return refined
+        present = np.any(mask, axis=0)
+        upper = np.where(present, np.argmax(mask, axis=0), np.nan)
+        lower = np.where(present, mask.shape[0]-1-np.argmax(mask[::-1], axis=0), np.nan)
+        indices = np.flatnonzero(present)
+        groups = np.split(indices, np.flatnonzero(np.diff(indices) > 1) + 1)
+        reach = max(2, int(np.ceil(radius)))
+        for boundary, direction in ((upper, 1), (lower, -1)):
+            for group in groups:
+                if not group.size:
+                    continue
+                cuts = np.flatnonzero(np.diff(boundary[group]) != 0) + 1
+                for plateau in np.split(group, cuts):
+                    start, end = int(plateau[0]), int(plateau[-1])
+                    if start == group[0] or end == group[-1] or end-start > 2*radius+3:
+                        continue
+                    level = boundary[start]
+                    if (direction*(boundary[start-1]-level) <= 0
+                            or direction*(boundary[end+1]-level) <= 0):
+                        continue
+                    center = (start+end)/2
+                    expected_y = level + direction*radius
+                    if abs(path[round(center)]-expected_y) < radius:
+                        continue
+                    left, right = int(center)-2*reach, int(center)+2*reach
+                    if left < group[0] or right > group[-1]:
+                        continue
+                    if (direction*(path[left]-expected_y) < radius
+                            or direction*(path[right]-expected_y) < radius):
+                        continue
+                    top = max(0, int(np.min(upper[left:right+1]))-1)
+                    bottom = min(mask.shape[0], int(np.max(lower[left:right+1]))+2)
+                    target = mask[top:bottom, left:right+1].astype(np.uint8)
+                    thickness = max(1, round(radius*2))
+
+                    def render(points: np.ndarray) -> np.ndarray:
+                        local = points - [left, top]
+                        rendered = np.zeros_like(target)
+                        cv2.polylines(rendered, [np.round(local*16).astype(np.int32)],
+                                      False, 1, thickness, cv2.LINE_8, shift=4)
+                        return rendered
+
+                    columns = np.arange(left, right+1)
+                    original = render(np.column_stack((columns, path[columns])))
+                    original_loss = np.count_nonzero(original != target)
+                    best_loss, best_vertex = original_loss, None
+                    for x in np.arange(center-reach, center+reach+0.1):
+                        for y in np.arange(expected_y-reach, expected_y+reach+0.1):
+                            candidate = render(np.array([[left, path[left]], [x, y], [right, path[right]]]))
+                            loss = np.count_nonzero(candidate != target)
+                            if loss < best_loss:
+                                best_loss, best_vertex = loss, (x, y)
+                    # A real plateau or curved turn should keep its original path.
+                    # Require a material improvement in the observed stroke fit.
+                    if best_vertex is None or best_loss > original_loss*0.8:
+                        continue
+                    x, y = best_vertex
+                    candidate_path = np.interp(columns, [left, x, right], [path[left], y, path[right]])
+                    if (np.any(candidate_path < upper[columns]-1)
+                            or np.any(candidate_path > lower[columns]+1)):
+                        continue
+                    refined[columns] = candidate_path
+        return refined
+
+    @staticmethod
+    def _thin_curve_pixels(mask: np.ndarray) -> np.ndarray:
+        """Zhang-Suen thinning: retain connected paths without thick-stroke bias."""
+        rows, columns = np.nonzero(mask)
+        if not rows.size:
+            return mask.copy()
+        # Limit repeated neighborhood operations to the foreground bounding box.
+        top, bottom = int(rows.min()), int(rows.max()) + 1
+        left, right = int(columns.min()), int(columns.max()) + 1
+        pixels = np.pad(mask[top:bottom, left:right], 1)
+        while True:
+            changed = False
+            for phase in (0, 1):
+                current = pixels[1:-1, 1:-1]
+                neighbors = [
+                    pixels[:-2, 1:-1], pixels[:-2, 2:], pixels[1:-1, 2:],
+                    pixels[2:, 2:], pixels[2:, 1:-1], pixels[2:, :-2],
+                    pixels[1:-1, :-2], pixels[:-2, :-2],
+                ]
+                count = sum(n.astype(np.uint8) for n in neighbors)
+                transitions = sum(
+                    (~a & b).astype(np.uint8)
+                    for a, b in zip(neighbors, neighbors[1:] + neighbors[:1])
+                )
+                north, east, south, west = (neighbors[i] for i in (0, 2, 4, 6))
+                preserve = (
+                    (north & east & south) | (east & south & west)
+                    if phase == 0 else
+                    (north & east & west) | (north & south & west)
+                )
+                remove = current & (count >= 2) & (count <= 6) & (transitions == 1) & ~preserve
+                changed |= bool(np.any(remove))
+                current[remove] = False
+            if not changed:
+                result = np.zeros_like(mask)
+                result[top:bottom, left:right] = pixels[1:-1, 1:-1]
+                return result
 
     @classmethod
     def _summarize_gaps(cls, readings: list[GraphReading]) -> list[GraphGap]:
