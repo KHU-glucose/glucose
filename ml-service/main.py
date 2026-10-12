@@ -24,6 +24,7 @@ load_dotenv()
 
 MAX_IMAGE_SIZE_BYTES = 8 * 1024 * 1024
 MAX_IMAGE_EDGE = 768
+MAX_GRAPH_IMAGE_EDGE = 2048
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png"}
 PROCESSING_LIMIT = asyncio.Semaphore(int(os.getenv("ML_MAX_CONCURRENCY", "4")))
 
@@ -158,6 +159,8 @@ def verify_internal_token(
 async def validate_and_prepare_image(
     image: UploadFile,
     request_id: str,
+    max_image_edge: int = MAX_IMAGE_EDGE,
+    preserve_pixels: bool = False,
 ) -> tuple[bytes, str]:
     if image.content_type not in ALLOWED_IMAGE_TYPES:
         raise ServiceError(400, "INVALID_IMAGE", "JPEG 또는 PNG 이미지만 지원합니다", request_id)
@@ -183,12 +186,18 @@ async def validate_and_prepare_image(
             request_id,
         ) from error
 
-    prepared_image.thumbnail((MAX_IMAGE_EDGE, MAX_IMAGE_EDGE))
+    mime_type = "image/jpeg" if image_format == "JPEG" else "image/png"
+    if preserve_pixels and max(prepared_image.size) <= max_image_edge:
+        # Graph boundary pixels must not be changed by an unnecessary JPEG save.
+        return image_bytes, mime_type
+
+    prepared_image.thumbnail((max_image_edge, max_image_edge))
     if image_format == "JPEG" and prepared_image.mode not in {"RGB", "L"}:
         prepared_image = prepared_image.convert("RGB")
     output = BytesIO()
-    prepared_image.save(output, format=image_format)
-    mime_type = "image/jpeg" if image_format == "JPEG" else "image/png"
+    output_format = "PNG" if preserve_pixels else image_format
+    prepared_image.save(output, format=output_format)
+    mime_type = "image/jpeg" if output_format == "JPEG" else "image/png"
     return output.getvalue(), mime_type
 
 
@@ -252,7 +261,9 @@ async def parse_graph(
     parser: LibreDailyGraphParser = Depends(get_graph_parser),
 ):
     request_id = request.state.request_id
-    image_bytes, _ = await validate_and_prepare_image(image, request_id)
+    image_bytes, _ = await validate_and_prepare_image(
+        image, request_id, max_image_edge=MAX_GRAPH_IMAGE_EDGE, preserve_pixels=True,
+    )
     try:
         async with PROCESSING_LIMIT:
             result = await asyncio.to_thread(parser.parse, image_bytes)

@@ -9,13 +9,14 @@ from models import FoodItem, FoodRecognitionPayload
 
 
 class FakeResponses:
-    def __init__(self):
+    def __init__(self, payload=None):
         self.calls = []
+        self.payload = payload
 
     async def parse(self, **kwargs):
         self.calls.append(kwargs)
         return SimpleNamespace(
-            output_parsed=FoodRecognitionPayload(
+            output_parsed=self.payload or FoodRecognitionPayload(
                 is_food_photo=True,
                 items=[
                     FoodItem(
@@ -99,8 +100,8 @@ def test_glucose_candidate_is_opt_in_and_preserves_output_contract():
 def test_cuisine_candidate_extends_v3_without_rewriting_existing_rules():
     from food_prompts import ACTIVE_PROMPT_VERSION
 
-    # cuisine-v7은 실제 사진 평가 전까지 실험 후보다. 운영 기본값은 v3 (2026-10-08 Dave 결정).
-    assert ACTIVE_PROMPT_VERSION == "examples-v3"
+    # cuisine-v7 remains opt-in; the default now addresses packaged chocolate recognition.
+    assert ACTIVE_PROMPT_VERSION != "cuisine-v7"
     assert get_food_prompt("cuisine-v7").startswith(get_food_prompt("examples-v3"))
     recognizer = OpenAIFoodRecognizer(client=SimpleNamespace(responses=FakeResponses()), prompt_version="cuisine-v7")
     assert recognizer.prompt == get_food_prompt("cuisine-v7")
@@ -114,3 +115,156 @@ def test_default_model_is_an_existing_model_id(monkeypatch):
     monkeypatch.delenv("FOOD_MODEL", raising=False)
     monkeypatch.delenv("OPENAI_MODEL", raising=False)
     assert OpenAIFoodRecognizer(api_key="test").model == "gpt-6-luna"
+
+
+def packaged_payload(name="과자", product_name="자유시간", tags=None):
+    return FoodRecognitionPayload(
+        is_food_photo=True,
+        items=[FoodItem(
+            name=name, count=2, unit="팩", category_hint="SNACK",
+            tags=tags if tags is not None else ["HIGH_FAT"],
+            packaged_product=dict(brand="해태", product_name=product_name, volume_ml=None),
+            confidence="medium",
+        )],
+        likely_consumed_all=None,
+    )
+
+
+@pytest.mark.parametrize("product_name", [
+    "자유시간", "자유시간 미니", "자유 시간", "해태 자유시간", "해태제과 자유시간 미니",
+])
+def test_default_recognizer_corrects_known_chocolate_and_preserves_observations(product_name):
+    source = packaged_payload(product_name=product_name, tags=["HIGH_FAT", "FAST_SUGAR"])
+    responses = FakeResponses(source)
+    recognizer = OpenAIFoodRecognizer(client=SimpleNamespace(responses=responses))
+
+    result = asyncio.run(recognizer.recognize(b"image", "image/jpeg", "SNACK"))
+
+    item = result.payload.items[0]
+    assert item.name == "초콜릿"
+    assert item.category_hint == "FAST_SUGAR"
+    assert item.food_group == "간식"
+    assert item.tags == ["HIGH_FAT", "FAST_SUGAR"]
+    original = source.items[0]
+    for field in ("packaged_product", "count", "unit", "confidence"):
+        assert getattr(item, field) == getattr(original, field)
+    assert original.name == "과자"
+    assert result.payload.likely_consumed_all is None
+    assert "자유시간" in responses.calls[0]["input"][0]["content"]
+
+
+@pytest.mark.parametrize("name,product_name", [
+    ("과자", None), ("과자", "자유"), ("과자", "알 수 없는 제품"),
+    ("초코쿠키", "초코쿠키"), ("초코파이", "초코파이"),
+    ("비스킷", "초콜릿 코팅 비스킷"), ("과자", "자유시간 쿠키"),
+])
+def test_chocolate_fix_does_not_relabel_other_or_unreadable_products(name, product_name):
+    source = packaged_payload(name=name, product_name=product_name)
+    recognizer = OpenAIFoodRecognizer(
+        client=SimpleNamespace(responses=FakeResponses(source)), prompt_version="packaged-v8",
+    )
+    result = asyncio.run(recognizer.recognize(b"image", "image/jpeg", None))
+    assert result.payload == source
+
+
+def test_product_identity_in_food_name_is_also_corrected():
+    source = packaged_payload(name="자유시간", product_name=None)
+    source.items[0].packaged_product = None
+    recognizer = OpenAIFoodRecognizer(client=SimpleNamespace(responses=FakeResponses(source)))
+    result = asyncio.run(recognizer.recognize(b"image", "image/jpeg", None))
+    assert result.payload.items[0].name == "초콜릿"
+    assert result.payload.items[0].packaged_product is None
+
+
+def test_explicit_sugar_free_label_keeps_snack_category():
+    source = packaged_payload(name="무설탕 과자", tags=["HIGH_FAT", "FAST_SUGAR"])
+    recognizer = OpenAIFoodRecognizer(client=SimpleNamespace(responses=FakeResponses(source)))
+    result = asyncio.run(recognizer.recognize(b"image", "image/jpeg", None))
+    assert result.payload.items[0].name == "무설탕 초콜릿"
+    assert result.payload.items[0].category_hint == "SNACK"
+    assert result.payload.items[0].tags == ["HIGH_FAT"]
+
+
+def test_historical_prompt_does_not_apply_new_product_corrections():
+    source = packaged_payload()
+    recognizer = OpenAIFoodRecognizer(
+        client=SimpleNamespace(responses=FakeResponses(source)), prompt_version="examples-v3",
+    )
+    result = asyncio.run(recognizer.recognize(b"image", "image/jpeg", None))
+    assert result.payload == source
+
+
+@pytest.mark.parametrize("name,product_name", [
+    ("과자", "가나"), ("과자", "롯데 크런키"), ("과자", "킷캣"),
+    ("과자", "스니커즈"), ("과자", "Kit Kat"), ("과자", "SNICKERS"),
+    ("과자", "ABC 초콜릿"), ("과자", "초콜릿 코팅 비스킷"),
+    ("과자", "초코파이"), ("과자", "초코칩 쿠키"),
+    ("초코쿠키", None), ("초콜릿바", None), ("다크 초콜릿", None),
+    ("밀크 초콜릿", None), ("화이트 초콜릿", None), ("Chocolate wafer", None),
+])
+def test_default_recognizer_groups_chocolate_snacks_across_products(name, product_name):
+    source = packaged_payload(name=name, product_name=product_name, tags=[])
+    if product_name is None:
+        source.items[0].packaged_product = None
+    recognizer = OpenAIFoodRecognizer(client=SimpleNamespace(responses=FakeResponses(source)))
+    result = asyncio.run(recognizer.recognize(b"image", "image/jpeg", None))
+    item = result.payload.items[0]
+    assert item.name == "초콜릿"
+    assert item.category_hint == "FAST_SUGAR"
+    assert item.food_group == "간식"
+    assert item.tags == ["FAST_SUGAR"]
+    for field in ("packaged_product", "count", "unit", "confidence"):
+        assert getattr(item, field) == getattr(source.items[0], field)
+
+
+@pytest.mark.parametrize("name,product_name,category,unit,volume_ml", [
+    ("과자", None, "SNACK", "팩", None),
+    ("쿠키", "버터쿠키", "SNACK", "팩", None),
+    ("과자", "알 수 없는 제품", "SNACK", "팩", None),
+    ("과자", "가나우유", "SNACK", "팩", None),
+    ("초코우유", None, "DRINK", "팩", None),
+    ("초콜릿 라떼", None, "SNACK", "컵", None),
+    ("과자", "초콜릿 음료", "SNACK", "팩", None),
+    ("과자", "초콜릿", "SNACK", "팩", 200),
+    ("초코케이크", None, "SNACK", "조각", None),
+    ("초콜릿 빵", None, "SNACK", "개", None),
+    ("초코 아이스크림", None, "SNACK", "개", None),
+    ("Chocolate brownie", None, "SNACK", "조각", None),
+    ("초콜릿 프로틴바", None, "SNACK", "개", None),
+    ("밥", None, "MEAL", "공기", None),
+])
+def test_chocolate_snack_policy_preserves_other_foods(name, product_name, category, unit, volume_ml):
+    source = packaged_payload(name=name, product_name=product_name)
+    source.items[0].category_hint = category
+    source.items[0].unit = unit
+    source.items[0].packaged_product.volume_ml = volume_ml
+    recognizer = OpenAIFoodRecognizer(client=SimpleNamespace(responses=FakeResponses(source)))
+    result = asyncio.run(recognizer.recognize(b"image", "image/jpeg", None))
+    assert result.payload == source
+
+
+@pytest.mark.parametrize("label", ["무설탕 초콜릿", "제로 초코쿠키", "Sugar-free chocolate"])
+def test_general_chocolate_policy_honors_explicit_sugar_free_labels(label):
+    source = packaged_payload(product_name=label, tags=["HIGH_FAT", "FAST_SUGAR"])
+    recognizer = OpenAIFoodRecognizer(client=SimpleNamespace(responses=FakeResponses(source)))
+    result = asyncio.run(recognizer.recognize(b"image", "image/jpeg", None))
+    assert result.payload.items[0].name == "무설탕 초콜릿"
+    assert result.payload.items[0].category_hint == "SNACK"
+    assert result.payload.items[0].tags == ["HIGH_FAT"]
+
+
+def test_chocolate_policy_only_changes_matching_items_in_a_mixed_photo():
+    source = packaged_payload(product_name="크런키")
+    source.items.append(packaged_payload(name="쿠키", product_name="버터쿠키").items[0])
+    recognizer = OpenAIFoodRecognizer(client=SimpleNamespace(responses=FakeResponses(source)))
+    result = asyncio.run(recognizer.recognize(b"image", "image/jpeg", None))
+    assert result.payload.items[0].name == "초콜릿"
+    assert result.payload.items[1] == source.items[1]
+    assert len(result.payload.items) == 2
+
+
+def test_non_food_photo_does_not_gain_chocolate_items():
+    source = FoodRecognitionPayload(is_food_photo=False, items=[], likely_consumed_all=None)
+    recognizer = OpenAIFoodRecognizer(client=SimpleNamespace(responses=FakeResponses(source)))
+    result = asyncio.run(recognizer.recognize(b"image", "image/jpeg", None))
+    assert result.payload == source

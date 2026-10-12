@@ -149,6 +149,7 @@ class ReportFlowTest {
         assertThat(((Number) glucose.get("average")).doubleValue()).isEqualTo(131.7);
         assertThat(glucose.get("min")).isEqualTo(65);
         assertThat(glucose.get("max")).isEqualTo(210);
+        assertThat(glucose.get("sufficient")).isEqualTo(false); // coverage_ratio 0.5 < 0.7
 
         List<Map<String, Object>> episodes = (List<Map<String, Object>>) body.get("episodes");
         assertThat(episodes).hasSize(1);
@@ -158,6 +159,12 @@ class ReportFlowTest {
         assertThat(episode.get("auto_reclassified")).isEqualTo(true);
         assertThat(episode.get("rebound_detected")).isEqualTo(true);
         assertThat(episode.get("intake_count")).isEqualTo(1);
+
+        List<String> summary = (List<String>) body.get("summary");
+        assertThat(summary).contains(
+                "이 날 혈당 그래프는 50%만 읽혔어요. 읽힌 구간만 보여드려요.",
+                "18:00 저혈당 처치 기록이 있어요.",
+                "처치 기록 뒤 2시간 안에 그래프 상단에 닿는 값이 읽혔어요.");
 
         assertThat(body.get("insulin_events_count")).isEqualTo(1);
         List<Map<String, Object>> insulinEvents = (List<Map<String, Object>>) body.get("insulin_events");
@@ -204,10 +211,71 @@ class ReportFlowTest {
         Map<String, Object> body = response.getBody();
         assertThat(body.get("days_with_data")).isEqualTo(1);
         assertThat(body.get("days_insufficient")).isEqualTo(6);
+        assertThat(body.get("sufficient_days")).isEqualTo(0);
+        assertThat(body.get("low_coverage_days")).isEqualTo(1);
+        assertThat(body.get("pending_days")).isEqualTo(0);
         assertThat(((Number) body.get("average_glucose")).doubleValue()).isEqualTo(131.7);
         assertThat(body.get("episodes_count")).isEqualTo(1);
         assertThat(body.get("rebound_count")).isEqualTo(1);
         assertThat(body.get("insulin_events_count")).isEqualTo(1);
+    }
+
+    @Test
+    void 의료인_공유용_리포트는_사실과_한계만_담고_해석은_없다() throws Exception {
+        String token = login();
+        uploadGraphAndWaitForParse(token);
+        createIntake(token, "SNACK", "2026-10-01T09:00:00Z", "포도당 캔디");
+        createInsulinEvent(token, "2026-10-01T09:05:00Z", 3, "처치");
+
+        ResponseEntity<Map> response = rest.exchange(
+                "/v1/reports/clinician?from=2026-10-01&to=2026-10-01",
+                HttpMethod.GET,
+                new HttpEntity<>(authHeaders(token)),
+                Map.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Map<String, Object> body = response.getBody();
+        assertThat(body.get("low_reading_threshold")).isEqualTo(70);
+        assertThat(body.get("disclaimer")).isEqualTo("일반 정보이며 의료 조언이 아닙니다.");
+        assertThat(body).doesNotContainKeys("education_cards", "summary");
+
+        Map<String, Object> totals = (Map<String, Object>) body.get("totals");
+        assertThat(totals.get("readings_count")).isEqualTo(3);
+        assertThat(totals.get("low_reading_count")).isEqualTo(1); // 65 < 70
+        assertThat(totals.get("above_range_count")).isEqualTo(1);
+        assertThat(totals.get("below_range_count")).isEqualTo(1);
+        assertThat(totals.get("days_low_coverage")).isEqualTo(1); // coverage_ratio 0.5 < 0.7
+        assertThat(totals.get("hypo_treatment_episodes_count")).isEqualTo(1);
+        assertThat(totals.get("insulin_events_count")).isEqualTo(1);
+
+        List<Map<String, Object>> days = (List<Map<String, Object>>) body.get("days");
+        assertThat(days).hasSize(1);
+        assertThat(days.get(0).get("status")).isEqualTo("LOW_COVERAGE");
+        List<Map<String, Object>> episodes = (List<Map<String, Object>>) days.get(0).get("episodes");
+        assertThat(episodes.get(0).get("entered_context")).isEqualTo("SNACK");
+        assertThat(episodes.get(0).get("above_range_observed")).isEqualTo(true);
+    }
+
+    @Test
+    void 의료인_공유용_리포트는_기간이_잘못되면_400이다() {
+        String token = login();
+
+        ResponseEntity<Map> response = rest.exchange(
+                "/v1/reports/clinician?from=2026-10-05&to=2026-10-01",
+                HttpMethod.GET,
+                new HttpEntity<>(authHeaders(token)),
+                Map.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().get("code")).isEqualTo("INVALID_PERIOD");
+    }
+
+    @Test
+    void 의료인_공유용_리포트는_인증이_필요하다() {
+        ResponseEntity<Map> response = rest.getForEntity(
+                "/v1/reports/clinician?from=2026-10-01&to=2026-10-01", Map.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 
     private void uploadGraphAndWaitForParse(String token) throws Exception {

@@ -11,6 +11,7 @@ from pydantic import ValidationError
 
 from models import FoodRecognitionMeta, FoodRecognitionPayload
 from food_prompts import ACTIVE_PROMPT_VERSION, get_food_prompt
+from packaged_food import normalize_chocolate_snacks, normalize_packaged_food
 
 
 FOOD_PROMPT = get_food_prompt(ACTIVE_PROMPT_VERSION)
@@ -118,6 +119,10 @@ class OpenAIFoodRecognizer:
                 payload = response.output_parsed
                 if payload is None:
                     raise ValueError("structured output is empty")
+                if self.prompt_version == "packaged-v8":
+                    payload = normalize_packaged_food(payload)
+                elif self.prompt_version == "chocolate-v9":
+                    payload = normalize_chocolate_snacks(payload)
 
                 usage = getattr(response, "usage", None)
                 latency_ms = round((time.perf_counter() - started_at) * 1000)

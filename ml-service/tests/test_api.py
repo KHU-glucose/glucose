@@ -139,3 +139,51 @@ def test_graph_endpoint_uses_contract_shape(monkeypatch):
     assert body["source"] == "LIBRE_DAILY_GRAPH"
     assert len(body["readings"]) == 96
     assert body["gaps"] == [{"from": "02:00", "to": "02:15"}]
+
+
+class RecordingGraphParser(FakeGraphParser):
+    def __init__(self):
+        self.inputs = []
+
+    def parse(self, image_bytes):
+        self.inputs.append(image_bytes)
+        return super().parse(image_bytes)
+
+
+def test_graph_endpoint_preserves_original_graph_pixels(monkeypatch):
+    monkeypatch.setenv("INTERNAL_TOKEN", "test-token")
+    parser = RecordingGraphParser()
+    source = io.BytesIO()
+    Image.new("RGB", (1179,2029), "white").save(source,"JPEG")
+    original = source.getvalue()
+    app.dependency_overrides[get_graph_parser] = lambda: parser
+    try:
+        with TestClient(app) as client:
+            response = client.post(
+                "/v1/graph/parse", headers={"X-Internal-Token":"test-token"},
+                files={"image":("graph.jpg",original,"image/jpeg")},
+            )
+    finally:
+        app.dependency_overrides.clear()
+    assert response.status_code==200
+    assert parser.inputs==[original]
+
+
+def test_oversized_graph_is_resized_losslessly_for_parser(monkeypatch):
+    monkeypatch.setenv("INTERNAL_TOKEN", "test-token")
+    parser = RecordingGraphParser()
+    source = io.BytesIO()
+    Image.new("RGB", (1600,4000), "white").save(source,"JPEG")
+    app.dependency_overrides[get_graph_parser] = lambda: parser
+    try:
+        with TestClient(app) as client:
+            response = client.post(
+                "/v1/graph/parse", headers={"X-Internal-Token":"test-token"},
+                files={"image":("graph.jpg",source.getvalue(),"image/jpeg")},
+            )
+    finally:
+        app.dependency_overrides.clear()
+    assert response.status_code==200
+    with Image.open(io.BytesIO(parser.inputs[0])) as image:
+        assert image.format=="PNG"
+        assert max(image.size)==2048

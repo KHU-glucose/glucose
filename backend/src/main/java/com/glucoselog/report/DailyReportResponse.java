@@ -12,9 +12,12 @@ public record DailyReportResponse(
         List<EpisodeSummary> episodes,
         int insulinEventsCount,
         List<InsulinEventMarker> insulinEvents,
-        List<EducationCardResponse> educationCards) {
+        List<EducationCardResponse> educationCards,
+        List<String> summary) {
 
-    public record GlucoseSummary(BigDecimal coverageRatio, BigDecimal average, Integer min, Integer max, int readingsCount) {
+    /** sufficient는 coverage_ratio가 설정 기준 이상인지의 기록 상태일 뿐, 혈당 평가가 아니다. */
+    public record GlucoseSummary(
+            BigDecimal coverageRatio, BigDecimal average, Integer min, Integer max, int readingsCount, boolean sufficient) {
     }
 
     /** 그래프 위에 표시할 인슐린 기록(입력된 사실만, 시각순). */
