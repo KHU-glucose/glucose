@@ -8,7 +8,6 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
-import com.glucoselog.glucose.ReadingFlag;
 import com.glucoselog.photo.PhotoContext;
 
 /**
@@ -76,15 +75,16 @@ public class EpisodeAnalyzer {
     }
 
     /**
-     * 반동 판정: 저혈당 처치 에피소드에서만 의미가 있다. 분석 창 안의 혈당 중 ABOVE_RANGE로
-     * 표시된 값이 하나라도 있으면 반동으로 본다(그래프에서 읽은 사용자별 목표범위 상단을 그대로
-     * 쓴다 - 별도의 숫자 임계값을 코드에 고정하지 않는다. Dave 확인).
+     * 반동 판정: 저혈당 처치 에피소드에서만 의미가 있다. 분석 창 안에서 읽힌 혈당 중 하나라도
+     * {@code reboundGlucoseThreshold}(기본 180)를 넘으면 반동으로 본다(Dave 결정 2026-10-12).
+     * 읽히지 않은 칸(null)은 판단에 쓰지 않는다. 그래프 상단에 붙은 값(ABOVE_RANGE)도 실제로는 그보다 높으므로 포함된다.
      */
     public boolean detectRebound(PhotoContext effectiveContext, List<GlucoseSample> windowSamples) {
         if (effectiveContext != PhotoContext.HYPO_TREATMENT) {
             return false;
         }
-        return windowSamples.stream().anyMatch(sample -> sample.flag() == ReadingFlag.ABOVE_RANGE);
+        int threshold = properties.reboundGlucoseThreshold();
+        return windowSamples.stream().anyMatch(sample -> sample.value() != null && sample.value() > threshold);
     }
 
     public record ClassificationResult(PhotoContext effectiveContext, boolean autoReclassifiedAsHypoTreatment) {

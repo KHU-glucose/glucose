@@ -13,7 +13,8 @@ public record DailyReportResponse(
         int insulinEventsCount,
         List<InsulinEventMarker> insulinEvents,
         List<EducationCardResponse> educationCards,
-        List<String> summary) {
+        List<String> summary,
+        int reboundGlucoseThreshold) {
 
     /** sufficient는 coverage_ratio가 설정 기준 이상인지의 기록 상태일 뿐, 혈당 평가가 아니다. */
     public record GlucoseSummary(

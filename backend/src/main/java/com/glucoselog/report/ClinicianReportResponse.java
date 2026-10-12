@@ -17,6 +17,7 @@ public record ClinicianReportResponse(
         LocalDate to,
         Instant generatedAt,
         int lowReadingThreshold,
+        int reboundThreshold,
         Totals totals,
         List<Day> days,
         List<String> notes,
@@ -65,8 +66,8 @@ public record ClinicianReportResponse(
 
     /**
      * 가까운 시각의 섭취 기록 묶음. {@code enteredContext}는 사용자가 입력한 분류이고 {@code autoReclassified}가
-     * true면 직전 값 때문에 처치로 분류했다는 뜻이다(null은 판단 불가). {@code aboveRangeObserved}는 처치 뒤
-     * 관찰 구간에서 그래프 상단에 닿은 값이 있었는지다(null은 읽힌 값이 없어 확인 불가).
+     * true면 직전 값 때문에 처치로 분류했다는 뜻이다(null은 판단 불가). {@code aboveReboundThresholdObserved}는 처치 뒤
+     * 관찰 구간에서 {@code reboundThreshold}를 넘는 값이 읽혔는지다(null은 읽힌 값이 없어 확인 불가).
      */
     public record Episode(
             Instant startAt,
@@ -74,7 +75,7 @@ public record ClinicianReportResponse(
             PhotoContext effectiveContext,
             Boolean autoReclassified,
             Instant windowEndAt,
-            Boolean aboveRangeObserved,
+            Boolean aboveReboundThresholdObserved,
             int intakeCount) {
     }
 }

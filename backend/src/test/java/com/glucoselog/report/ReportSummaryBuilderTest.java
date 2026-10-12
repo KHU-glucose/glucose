@@ -18,7 +18,7 @@ class ReportSummaryBuilderTest {
     private static final List<String> FORBIDDEN = List.of(
             "위험", "정상", "비정상", "늘리세요", "줄이세요", "끊으세요", "잘했어요", "부족해요", "안심", "괜찮", "때문에", "원인");
 
-    private final ReportSummaryBuilder builder = new ReportSummaryBuilder(new EpisodeProperties(90, 4, 2, 12, 70));
+    private final ReportSummaryBuilder builder = new ReportSummaryBuilder(new EpisodeProperties(90, 4, 2, 12, 70, 180));
 
     private static DailyReportResponse.GlucoseSummary glucose(String coverage, boolean sufficient) {
         return new DailyReportResponse.GlucoseSummary(
@@ -78,7 +78,7 @@ class ReportSummaryBuilderTest {
         assertThat(lines).contains(
                 "18:00 저혈당 처치 기록이 있어요.",
                 "직전에 읽힌 값이 70 미만이라 처치 기록으로 분류했어요. 입력하신 분류는 간식이에요.",
-                "처치 기록 뒤 2시간 안에 그래프 상단에 닿는 값이 읽혔어요.");
+                "처치 기록 뒤 2시간 안에 180 mg/dL을 넘는 값이 읽혔어요.");
         assertNoForbidden(lines);
     }
 
@@ -94,7 +94,7 @@ class ReportSummaryBuilderTest {
     void 처치_뒤_상단_값이_없으면_읽힌_구간에서는_없었다고_쓴다() {
         List<String> lines = builder.daily(glucose("0.94", true), List.of(hypoEpisode(false, false)), 0);
 
-        assertThat(lines).contains("처치 기록 뒤 2시간 동안 읽힌 구간에서는 그래프 상단에 닿는 값이 없었어요.");
+        assertThat(lines).contains("처치 기록 뒤 2시간 동안 읽힌 구간에서는 180 mg/dL을 넘는 값이 없었어요.");
     }
 
     @Test
@@ -122,7 +122,7 @@ class ReportSummaryBuilderTest {
         assertThat(lines).contains(
                 "이 주는 2일 충분히 읽혔고, 1일은 일부만 읽혔어요. 1일은 올라온 그래프가 없어요. 3일은 아직 집계 중이에요.",
                 "읽힌 값 기준 평균은 138.2 mg/dL예요. 읽히지 않은 구간은 포함하지 않았어요.",
-                "처치 기록 뒤 그래프 상단에 닿는 값이 읽힌 경우가 2건 있어요.",
+                "처치 기록 뒤 180 mg/dL을 넘는 값이 읽힌 경우가 2건 있어요.",
                 "일반 목표와의 비교는 지금은 제공하지 않아요.");
         assertNoForbidden(lines);
     }

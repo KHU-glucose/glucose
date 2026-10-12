@@ -82,3 +82,4 @@ episode:
   hypo-treatment-window-hours: 2
   alcohol-window-hours: 12
   hypo-glucose-threshold: 70  # 에피소드 시작 직전 혈당이 이 값 미만이면 처치로 자동 분류
+  rebound-glucose-threshold: 180  # 처치 에피소드 분석 창 안에서 이 값을 넘는 혈당이 읽히면 반동 (Dave 결정 2026-10-12)

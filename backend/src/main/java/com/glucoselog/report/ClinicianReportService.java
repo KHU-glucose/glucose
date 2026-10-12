@@ -176,6 +176,7 @@ public class ClinicianReportService {
                 to,
                 clock.instant(),
                 threshold,
+                episodeProperties.reboundGlucoseThreshold(),
                 totals,
                 Collections.unmodifiableList(days),
                 NOTES,

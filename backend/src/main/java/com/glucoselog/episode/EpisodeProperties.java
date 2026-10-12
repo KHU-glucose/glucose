@@ -10,5 +10,6 @@ public record EpisodeProperties(
         int mealWindowHours,
         int hypoTreatmentWindowHours,
         int alcoholWindowHours,
-        int hypoGlucoseThreshold) {
+        int hypoGlucoseThreshold,
+        int reboundGlucoseThreshold) {
 }

@@ -218,7 +218,7 @@ ml-service (ml-service:8000, FastAPI)
     { "id": "pending_days", "value": 2, "unit": "일", "meaning": "아직 끝나지 않아 집계 중인 날 수" },
     { "id": "average_glucose", "value": 138.2, "unit": "mg/dL", "meaning": "읽힌 값만으로 계산한 평균" },
     { "id": "insulin_events_count", "value": 10, "unit": "건", "meaning": "인슐린 기록 건수" },
-    { "id": "above_range_after_treatment_count", "value": 2, "unit": "건", "meaning": "처치 기록 뒤 그래프 상단에 닿는 값이 읽힌 건수" }
+    { "id": "above_rebound_threshold_after_treatment_count", "value": 2, "unit": "건", "meaning": "처치 기록 뒤 180 mg/dL을 넘는 값이 읽힌 건수" }
   ]
 }
 ```

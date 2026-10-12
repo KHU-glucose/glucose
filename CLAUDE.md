@@ -62,7 +62,7 @@ AI_use_organize/               경진대회 제출용 AI 활용 기록 (건드�
 - **스택 PR 주의**: 아래 PR을 위 PR의 브랜치를 base로 쌓으면, 위 PR이 main에 머지된 뒤 아래 PR의 base를 main으로 바꾸지 않고 머지했을 때 main에 안 들어간다(#17~#19, #22~#23에서 실제로 발생 → landing PR로 복구). 저장소 설정 "Automatically delete head branches"를 켜면 GitHub가 자동으로 base를 옮겨준다.
 - Bundle ID는 `com.glubee.glubee`로 확정(앱 실제 이름 Glubee). `com.glucose.glucose`는 쓰지 않음 — 저장소/패키지명(`com.glucoselog`)은 그대로 유지.
 - 비용: AWS 크레딧(Free Tier)으로 Lightsail $12/월 차감 예정. 크레딧 소진 시점 확인 필요.
-- 결정됨: 그래프 재업로드는 **덮어쓰기**. 반동 판정은 **그래프의 ABOVE_RANGE 플래그 재사용**(새 숫자 임계값을 코드에 고정하지 않음, 사용자별 목표범위 자동 반영). 리포트 문장(AI 요약)은 **지금은 안 만듦** — 숫자/건수만 반환(ml-service에 리포트용 엔드포인트가 없어서, 필요해지면 계약 문서부터 고치고 팀원과 협의).
+- 결정됨: 그래프 재업로드는 **덮어쓰기**. 반동 판정은 **처치 후 분석 창 안에서 180 mg/dL 초과**(`episode.rebound-glucose-threshold`, 2026-10-12 Dave 결정). 이전 설명 "ABOVE_RANGE=사용자별 목표범위"는 틀렸음 — ABOVE_RANGE는 그래프 상단(약 350)에 붙은 값이다. 리포트 문장(AI 요약)은 **지금은 안 만듦** — 숫자/건수만 반환(ml-service에 리포트용 엔드포인트가 없어서, 필요해지면 계약 문서부터 고치고 팀원과 협의).
 - 미결정: 저장소 공개 여부(경진대회 요건 확인 후 private 전환 검토 — 지금은 public 유지), 그래프 파서 담당 범위/진행 상황(현재는 팀원이 실제 OpenCV+OCR 구현 완료).
 
 ## 작업 방식 선호
