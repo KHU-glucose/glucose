@@ -158,11 +158,41 @@ CUISINE_V7 = EXAMPLES_V3 + """
 - 피자: name=피자, food_group=null, category_hint=MEAL, count=null.
 """.rstrip()
 
+PACKAGED_V8 = EXAMPLES_V3 + """
+
+# 포장 간식의 음식명 구분
+- 읽히는 제품명과 식품 종류 표시를 음식명 식별 근거로 사용합니다. 브랜드·제품명은
+  packaged_product에 보존하고 name에는 구체적인 일반 음식명을 씁니다.
+- 자유시간·자유시간 미니가 식별되는 포장 제품은 초콜릿바입니다.
+  name=초콜릿, category_hint=FAST_SUGAR로 기록하며 '과자'로 뭉뚱그리지 않습니다.
+  개수는 보이는 포장 수만 셉니다. 제품명이나 표시가 읽히지 않으면 추측하지 않습니다.
+- 초코쿠키·초코파이·초콜릿 코팅 비스킷은 각각 쿠키·초코파이·비스킷으로 구분하고
+  SNACK을 유지합니다. 초코 맛이나 초콜릿 코팅만으로 모든 과자를 초콜릿으로 바꾸지 않습니다.
+- 명확한 무설탕·제로 표시는 기존 무설탕 분류 규칙을 우선합니다.
+""".rstrip()
+
+CHOCOLATE_V9 = EXAMPLES_V3 + """
+
+# 초콜릿 간식의 기록용 분류 (일반 과자와 구분)
+- 읽히는 포장 제품명·식품 종류 표시와 보이는 음식 형태를 함께 사용합니다.
+  자유시간뿐 아니라 판초콜릿·초콜릿바·초콜릿 코팅 과자·초코쿠키·초코파이 등
+  초콜릿 간식이 식별되면 name=초콜릿, category_hint=FAST_SUGAR로 통일합니다.
+  일반 '과자'나 SNACK으로 뭉뚱그리지 않습니다. 이 규칙은 위 일반 과자 분류보다 우선합니다.
+- 자유시간·가나·크런키·킷캣·스니커즈 같은 제품도 동일하게 처리합니다.
+  브랜드만 보고 종류를 추측하지 않고, 확인한 제품명은 packaged_product에 보존합니다.
+- 초코 음료·초코우유·케이크·빵·아이스크림은 해당 음식명을 유지합니다.
+  일반 과자나 포장이 읽히지 않고 초콜릿임을 식별할 수 없는 음식은 임의로 바꾸지 않습니다.
+- 명확한 무설탕·제로 초콜릿은 name=무설탕 초콜릿, category_hint=SNACK으로 기록하고
+  FAST_SUGAR 태그를 쓰지 않습니다. 개수·단위·confidence의 기존 규칙을 유지합니다.
+- 이 분류는 앱의 기록용 구분입니다. 당 함량이나 혈당 반응, 치료 적합성을 추정하지 않습니다.
+""".rstrip()
+
 PROMPTS = {"baseline-v1": BASELINE_V1, "rules-v2": RULES_V2, "examples-v3": EXAMPLES_V3,
            "focused-v4": FOCUSED_V4, "contrast-v5": CONTRAST_V5, "glucose-v6": GLUCOSE_V6,
-           "cuisine-v7": CUISINE_V7}
+           "cuisine-v7": CUISINE_V7, "packaged-v8": PACKAGED_V8, "chocolate-v9": CHOCOLATE_V9}
 # cuisine-v7은 실제 사진 평가 전까지 실험 후보. 기존 100장으로 v3와 비교 후 전환한다(2026-10-08 Dave 결정).
-ACTIVE_PROMPT_VERSION = "examples-v3"
+ACTIVE_PROMPT_VERSION = "chocolate-v9"
+# v9 extends the user's chocolate-snack classification request; real-image accuracy is not measured yet.
 # v4/v5/v6 remain experimental; v6 has no real-image performance evidence yet.
 # v7 adds display groups at the user's request; real-image accuracy is not measured yet.
 
