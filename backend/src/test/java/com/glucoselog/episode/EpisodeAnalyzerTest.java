@@ -18,7 +18,7 @@ class EpisodeAnalyzerTest {
     private static final Instant BASE = Instant.parse("2026-10-01T08:00:00Z");
 
     private final EpisodeAnalyzer analyzer =
-            new EpisodeAnalyzer(new EpisodeProperties(90, 4, 2, 12, 70));
+            new EpisodeAnalyzer(new EpisodeProperties(90, 4, 2, 12, 70, 180));
 
     private static IntakeOccurrence intake(Instant time, PhotoContext context) {
         return new IntakeOccurrence(UUID.randomUUID(), time, context);
@@ -138,30 +138,44 @@ class EpisodeAnalyzerTest {
         assertThat(analyzer.windowFor(PhotoContext.ALCOHOL)).isEqualTo(Duration.ofHours(12));
     }
 
-    // ── detectRebound() ──────────────────────────────────────
+    // ── detectRebound() — 기준 180 mg/dL 초과 (Dave 결정 2026-10-12) ──
 
     @Test
-    void 처치_에피소드에서_분석창_안에_ABOVE_RANGE가_있으면_반동이다() {
+    void 처치_에피소드에서_분석창_안에_180을_넘는_값이_있으면_반동이다() {
         List<GlucoseSample> samples = List.of(
                 new GlucoseSample(BASE, 65, ReadingFlag.BELOW_RANGE),
                 new GlucoseSample(BASE.plus(Duration.ofMinutes(30)), 110, ReadingFlag.NORMAL),
-                new GlucoseSample(BASE.plus(Duration.ofMinutes(60)), 210, ReadingFlag.ABOVE_RANGE));
+                new GlucoseSample(BASE.plus(Duration.ofMinutes(60)), 181, ReadingFlag.NORMAL));
 
         assertThat(analyzer.detectRebound(PhotoContext.HYPO_TREATMENT, samples)).isTrue();
     }
 
     @Test
-    void 처치_에피소드여도_ABOVE_RANGE가_없으면_반동이_아니다() {
-        List<GlucoseSample> samples = List.of(
-                new GlucoseSample(BASE, 65, ReadingFlag.BELOW_RANGE),
-                new GlucoseSample(BASE.plus(Duration.ofMinutes(30)), 110, ReadingFlag.NORMAL));
+    void 정확히_180이면_반동이_아니다() {
+        List<GlucoseSample> samples = List.of(new GlucoseSample(BASE, 180, ReadingFlag.NORMAL));
 
         assertThat(analyzer.detectRebound(PhotoContext.HYPO_TREATMENT, samples)).isFalse();
     }
 
     @Test
-    void 처치_에피소드가_아니면_ABOVE_RANGE가_있어도_반동으로_보지_않는다() {
-        List<GlucoseSample> samples = List.of(new GlucoseSample(BASE, 210, ReadingFlag.ABOVE_RANGE));
+    void 그래프_상단에_붙은_값도_180을_넘으므로_반동이다() {
+        List<GlucoseSample> samples = List.of(new GlucoseSample(BASE, 350, ReadingFlag.ABOVE_RANGE));
+
+        assertThat(analyzer.detectRebound(PhotoContext.HYPO_TREATMENT, samples)).isTrue();
+    }
+
+    @Test
+    void 읽히지_않은_칸은_판단에_쓰지_않는다() {
+        List<GlucoseSample> samples = List.of(
+                new GlucoseSample(BASE, null, ReadingFlag.MISSING),
+                new GlucoseSample(BASE.plus(Duration.ofMinutes(15)), 150, ReadingFlag.NORMAL));
+
+        assertThat(analyzer.detectRebound(PhotoContext.HYPO_TREATMENT, samples)).isFalse();
+    }
+
+    @Test
+    void 처치_에피소드가_아니면_180을_넘어도_반동으로_보지_않는다() {
+        List<GlucoseSample> samples = List.of(new GlucoseSample(BASE, 250, ReadingFlag.NORMAL));
 
         assertThat(analyzer.detectRebound(PhotoContext.MEAL, samples)).isFalse();
     }

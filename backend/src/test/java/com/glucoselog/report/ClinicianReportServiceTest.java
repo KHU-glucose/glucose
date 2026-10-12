@@ -32,7 +32,7 @@ class ClinicianReportServiceTest {
     private final DailyReportService daily = mock(DailyReportService.class);
     private final GlucoseTimelineService timeline = mock(GlucoseTimelineService.class);
     private final ClinicianReportService service =
-            new ClinicianReportService(daily, timeline, new EpisodeProperties(90, 4, 2, 12, 70), CLOCK);
+            new ClinicianReportService(daily, timeline, new EpisodeProperties(90, 4, 2, 12, 70, 180), CLOCK);
 
     private static Instant at(String hhmmUtc) {
         return Instant.parse("2026-10-01T" + hhmmUtc + ":00Z");
@@ -44,7 +44,7 @@ class ClinicianReportServiceTest {
                 ? List.of()
                 : List.of(new DailyReportResponse.InsulinEventMarker(at("09:05"), new BigDecimal("3"), "처치"));
         when(daily.getDailyReport(USER, date))
-                .thenReturn(new DailyReportResponse(date, glucose, episodes, insulinCount, insulin, List.of(), List.of()));
+                .thenReturn(new DailyReportResponse(date, glucose, episodes, insulinCount, insulin, List.of(), List.of(), 180));
         when(timeline.findDaySummary(USER, date))
                 .thenReturn(glucose == null
                         ? Optional.empty()
@@ -150,7 +150,7 @@ class ClinicianReportServiceTest {
         assertThat(result.enteredContext()).isEqualTo(PhotoContext.SNACK);
         assertThat(result.effectiveContext()).isEqualTo(PhotoContext.HYPO_TREATMENT);
         assertThat(result.autoReclassified()).isTrue();
-        assertThat(result.aboveRangeObserved()).isTrue();
+        assertThat(result.aboveReboundThresholdObserved()).isTrue();
         assertThat(report.totals().hypoTreatmentEpisodesCount()).isEqualTo(1);
         assertThat(report.totals().insulinEventsCount()).isEqualTo(1);
     }

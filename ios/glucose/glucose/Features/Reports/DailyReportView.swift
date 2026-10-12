@@ -32,7 +32,7 @@ struct DailyReportView: View {
                 }
             case .loaded(let report, let points):
                 glucoseSection(report: report, points: points)
-                episodesSection(report.episodes)
+                episodesSection(report.episodes, reboundThreshold: report.reboundGlucoseThreshold)
                 insulinSection(report: report)
                 educationSection(report.educationCards)
             }
@@ -140,14 +140,14 @@ struct DailyReportView: View {
     // MARK: - 기록(에피소드)
 
     @ViewBuilder
-    private func episodesSection(_ episodes: [DailyReport.Episode]) -> some View {
+    private func episodesSection(_ episodes: [DailyReport.Episode], reboundThreshold: Int?) -> some View {
         Section("먹은 기록 \(episodes.count)회") {
             if episodes.isEmpty {
                 Text("이 날 기록이 없어요.")
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(episodes) { episode in
-                    EpisodeRow(episode: episode)
+                    EpisodeRow(episode: episode, reboundThreshold: reboundThreshold)
                 }
             }
         }
@@ -198,6 +198,11 @@ struct DailyReportView: View {
 
 private struct EpisodeRow: View {
     let episode: DailyReport.Episode
+    let reboundThreshold: Int?
+
+    private var thresholdText: String {
+        reboundThreshold.map { "\($0) mg/dL" } ?? "반동 기준"
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -223,10 +228,10 @@ private struct EpisodeRow: View {
             if episode.effectiveContext == .hypoTreatment {
                 switch episode.reboundDetected {
                 case .some(true):
-                    note("처치 후 \(ReportDay.timeString(from: episode.windowEndAt))까지 혈당이 목표범위보다 높아진 구간이 있어요",
+                    note("처치 후 \(ReportDay.timeString(from: episode.windowEndAt))까지 \(thresholdText)을 넘는 값이 읽혔어요",
                          systemImage: "arrow.up.right")
                 case .some(false):
-                    note("처치 후 \(ReportDay.timeString(from: episode.windowEndAt))까지 목표범위 위로 오르지 않았어요",
+                    note("처치 후 \(ReportDay.timeString(from: episode.windowEndAt))까지 읽힌 구간에서는 \(thresholdText)을 넘는 값이 없었어요",
                          systemImage: "checkmark")
                 case .none:
                     note("처치 후 혈당 데이터가 없어 반동 여부를 판단할 수 없어요", systemImage: "questionmark.circle")

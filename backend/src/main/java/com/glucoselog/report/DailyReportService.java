@@ -15,6 +15,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import com.glucoselog.episode.EpisodeProperties;
 import com.glucoselog.episode.GlucoseSample;
 import com.glucoselog.insulin.InsulinEvent;
 import com.glucoselog.insulin.InsulinEventRepository;
@@ -30,6 +31,7 @@ public class DailyReportService {
     private final EducationCardRepository educationCardRepository;
     private final ReportProperties properties;
     private final ReportSummaryBuilder summaryBuilder;
+    private final EpisodeProperties episodeProperties;
 
     public DailyReportService(
             GlucoseTimelineService timelineService,
@@ -37,13 +39,15 @@ public class DailyReportService {
             InsulinEventRepository insulinEventRepository,
             EducationCardRepository educationCardRepository,
             ReportProperties properties,
-            ReportSummaryBuilder summaryBuilder) {
+            ReportSummaryBuilder summaryBuilder,
+            EpisodeProperties episodeProperties) {
         this.timelineService = timelineService;
         this.episodeReportService = episodeReportService;
         this.insulinEventRepository = insulinEventRepository;
         this.educationCardRepository = educationCardRepository;
         this.properties = properties;
         this.summaryBuilder = summaryBuilder;
+        this.episodeProperties = episodeProperties;
     }
 
     public DailyReportResponse getDailyReport(UUID userId, LocalDate date) {
@@ -74,7 +78,8 @@ public class DailyReportService {
         List<String> summary = summaryBuilder.daily(glucoseSummary, episodes, insulinEvents.size());
 
         return new DailyReportResponse(
-                date, glucoseSummary, episodes, insulinEvents.size(), insulinEvents, educationCards, summary);
+                date, glucoseSummary, episodes, insulinEvents.size(), insulinEvents, educationCards, summary,
+                episodeProperties.reboundGlucoseThreshold());
     }
 
     private List<EducationCardResponse> cardsFor(EducationCardTrigger trigger) {

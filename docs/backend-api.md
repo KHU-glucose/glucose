@@ -326,6 +326,7 @@ API는 없다. `EpisodeAnalyzer`(순수 함수)만 있고, 리포트(B7)가 실�
   "insulin_events_count": 1,
   "insulin_events": [ { "occurred_at": "2026-10-01T09:05:00Z", "units": 3, "kind": "처치" } ],
   "education_cards": [ { "trigger": "REBOUND", "title": "...", "body": "..." } ],
+  "rebound_glucose_threshold": 180,
   "summary": [
     "이 날 혈당 그래프의 94%를 읽었어요.",
     "읽힌 값 90개 기준, 평균 142.3, 최저 68, 최고 210 mg/dL예요.",
@@ -339,6 +340,9 @@ API는 없다. `EpisodeAnalyzer`(순수 함수)만 있고, 리포트(B7)가 실�
   임계값 0.7은 임시 제품 기준이며 운영 coverage 분포를 보고 조정한다(2026-10-10 결정).
 - 에피소드의 `auto_reclassified`/`rebound_detected`가 `null`이면 "확인해봤더니 아니다"가 아니라
   **그 시점에 쓸 글루코스 데이터가 없어서 판단 자체를 못 했다**는 뜻이다(`false`와 다르다).
+- `rebound_detected`: 저혈당 처치 에피소드의 분석 창 안에서 `rebound_glucose_threshold`(기본 180 mg/dL)를
+  **넘는** 값이 하나라도 읽혔는지(2026-10-12 Dave 결정). 정확히 180은 해당하지 않는다. 처치가 아닌 에피소드는 항상 `false`.
+  앱은 문구에 이 기준값을 그대로 쓴다(숫자를 앱에 따로 두지 않는다).
 
 ### `GET /v1/reports/weekly/{date}` — 주간 리포트
 `date`는 그 주(월~일, ISO 기준) 안의 임의의 날. 응답 200:
@@ -368,7 +372,7 @@ API는 없다. `EpisodeAnalyzer`(순수 함수)만 있고, 리포트(B7)가 실�
 
 ### 본인용 `summary` (일일·주간 공통)
 `summary`는 서버가 **고정 문장 틀**에 계산된 사실만 채운 문장 목록이다. AI가 쓰지 않는다. 읽힌 비율·값 개수·
-기록 건수·분류·관찰 사실(그래프 상단에 닿는 값이 읽혔는지)과 한계만 말하고, 원인 설명·평가·조언·안심 문구·
+기록 건수·분류·관찰 사실(처치 뒤 반동 기준(180 mg/dL)을 넘는 값이 읽혔는지)과 한계만 말하고, 원인 설명·평가·조언·안심 문구·
 인슐린 용량은 넣지 않는다(`medical-info-policy.md` 4장). 읽힌 값이 없으면 "없다/확인하지 못했다"고 쓰고 "없었다"고
 쓰지 않는다. 클라이언트는 이 문장을 그대로 표시하고 의학 판단을 다시 계산하지 않는다. 문구는 팀 검토 전 초안이며
 의료인 검토를 받지 않았다.
@@ -381,6 +385,7 @@ API는 없다. `EpisodeAnalyzer`(순수 함수)만 있고, 리포트(B7)가 실�
   "from": "2026-09-28", "to": "2026-10-04",
   "generated_at": "2026-10-10T03:00:00Z",
   "low_reading_threshold": 70,
+  "rebound_threshold": 180,
   "totals": {
     "period_days": 7, "days_sufficient": 4, "days_low_coverage": 1, "days_no_graph": 2, "days_in_progress": 0,
     "readings_count": 480, "average": 138.2, "min": 62, "max": 245,
@@ -395,7 +400,7 @@ API는 없다. `EpisodeAnalyzer`(순수 함수)만 있고, 리포트(B7)가 실�
       "low_readings": [ { "time": "2026-09-28T08:45:00Z", "value": 62, "flag": "NORMAL" } ],
       "episodes": [
         { "start_at": "2026-09-28T09:00:00Z", "entered_context": "SNACK", "effective_context": "HYPO_TREATMENT",
-          "auto_reclassified": true, "window_end_at": "2026-09-28T11:00:00Z", "above_range_observed": true, "intake_count": 1 }
+          "auto_reclassified": true, "window_end_at": "2026-09-28T11:00:00Z", "above_rebound_threshold_observed": true, "intake_count": 1 }
       ],
       "insulin_events": [ { "occurred_at": "2026-09-28T09:05:00Z", "units": 3, "kind": "처치" } ]
     }
@@ -407,10 +412,11 @@ API는 없다. `EpisodeAnalyzer`(순수 함수)만 있고, 리포트(B7)가 실�
 - `day.status`: `SUFFICIENT`(coverage ≥ 설정 기준) / `LOW_COVERAGE` / `NO_GRAPH`(오늘 이전인데 그래프 없음) /
   `IN_PROGRESS`(오늘 및 이후). 읽힌 값이 없으면 `average`/`min`/`max`는 `null`이다(0이 아님).
 - **낮은 값 기준**은 새로 만들지 않고 기존 `episode.hypo-glucose-threshold`를 그대로 쓴다(`low_reading_threshold`로 노출).
-  높은 쪽은 숫자 기준 없이 그래프 상단 플래그(`ABOVE_RANGE`)의 개수만 센다. 범위 내 시간(TIR)·변동계수(CV)는
+  `above_range_count`는 그래프 상단에 붙은 값(`ABOVE_RANGE`, 실제로는 그보다 높음)의 개수다. 범위 내 시간(TIR)·변동계수(CV)는
   이미지 추정값 검증 전이라 제공하지 않는다.
-- `above_range_observed`: 처치 뒤 관찰 구간에 그래프 상단에 닿는 값이 있었는지(`null`=읽힌 값이 없어 확인 불가).
-  기존 `rebound_detected`와 같은 계산이지만 원인을 암시하지 않는 이름을 쓴다. `entered_context`는 사용자가 입력한 분류다.
+- `above_rebound_threshold_observed`: 처치 뒤 관찰 구간에 `rebound_threshold`(기본 180 mg/dL)를 넘는 값이 읽혔는지
+  (`null`=읽힌 값이 없어 확인 불가). 기존 `rebound_detected`와 같은 계산이지만 원인을 암시하지 않는 이름을 쓴다.
+  `above_range_count`(그래프 상단에 붙은 값의 개수)와는 다른 값이다. `entered_context`는 사용자가 입력한 분류다.
 - `notes`와 `disclaimer`는 서버가 고정해서 항상 붙인다(추정값임, 보간하지 않음, 경계 값 의미, 기록 시각의 한계).
   문구는 팀 검토 전 초안이며 의료인 검토를 받지 않았다.
 

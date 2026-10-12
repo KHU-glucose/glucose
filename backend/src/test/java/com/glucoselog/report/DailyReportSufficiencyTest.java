@@ -35,7 +35,8 @@ class DailyReportSufficiencyTest {
             insulin,
             cards,
             new ReportProperties(new BigDecimal("0.7")),
-            new ReportSummaryBuilder(new EpisodeProperties(90, 4, 2, 12, 70)));
+            new ReportSummaryBuilder(new EpisodeProperties(90, 4, 2, 12, 70, 180)),
+            new EpisodeProperties(90, 4, 2, 12, 70, 180));
 
     private DailyReportResponse reportWithCoverage(String coverage) {
         List<GlucoseSample> samples = List.of(new GlucoseSample(Instant.parse("2026-09-30T15:00:00Z"), 120, ReadingFlag.NORMAL));

@@ -28,7 +28,7 @@ class WeeklyReportServiceTest {
 
     private final DailyReportService daily = mock(DailyReportService.class);
     private final WeeklyReportService service = new WeeklyReportService(
-            daily, new ReportSummaryBuilder(new EpisodeProperties(90, 4, 2, 12, 70)), CLOCK);
+            daily, new ReportSummaryBuilder(new EpisodeProperties(90, 4, 2, 12, 70, 180)), CLOCK);
 
     private static DailyReportResponse.GlucoseSummary glucose(String coverage, String average, int count, boolean sufficient) {
         return new DailyReportResponse.GlucoseSummary(
@@ -37,13 +37,13 @@ class WeeklyReportServiceTest {
 
     private void stubDay(LocalDate date, DailyReportResponse.GlucoseSummary glucose) {
         when(daily.getDailyReport(eq(USER), eq(date)))
-                .thenReturn(new DailyReportResponse(date, glucose, List.of(), 0, List.of(), List.of(), List.of()));
+                .thenReturn(new DailyReportResponse(date, glucose, List.of(), 0, List.of(), List.of(), List.of(), 180));
     }
 
     private void stubAllDaysEmpty() {
         when(daily.getDailyReport(eq(USER), any(LocalDate.class))).thenAnswer(invocation -> {
             LocalDate date = invocation.getArgument(1);
-            return new DailyReportResponse(date, null, List.of(), 0, List.of(), List.of(), List.of());
+            return new DailyReportResponse(date, null, List.of(), 0, List.of(), List.of(), List.of(), 180);
         });
     }
 
@@ -84,7 +84,7 @@ class WeeklyReportServiceTest {
         LocalDate pastMonday = LocalDate.of(2026, 9, 28);
         when(daily.getDailyReport(eq(USER), eq(pastMonday)))
                 .thenReturn(new DailyReportResponse(
-                        pastMonday, glucose("0.5", "120.0", 48, false), List.of(), 0, List.of(), List.of(), List.of()));
+                        pastMonday, glucose("0.5", "120.0", 48, false), List.of(), 0, List.of(), List.of(), List.of(), 180));
 
         WeeklyReportResponse response = service.getWeeklyReport(USER, pastMonday);
 

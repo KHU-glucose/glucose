@@ -81,7 +81,7 @@ public class ReportSummaryBuilder {
         }
         lines.add("섭취 기록 묶음 " + week.episodesCount() + "건, 인슐린 기록 " + week.insulinEventsCount() + "건이에요.");
         if (week.reboundCount() > 0) {
-            lines.add("처치 기록 뒤 그래프 상단에 닿는 값이 읽힌 경우가 " + week.reboundCount() + "건 있어요.");
+            lines.add("처치 기록 뒤 " + episodeProperties.reboundGlucoseThreshold() + " mg/dL을 넘는 값이 읽힌 경우가 " + week.reboundCount() + "건 있어요.");
         }
         lines.add("일반 목표와의 비교는 지금은 제공하지 않아요.");
         return lines;
@@ -107,9 +107,9 @@ public class ReportSummaryBuilder {
             if (episode.reboundDetected() == null) {
                 lines.add("처치 기록 뒤 구간에 읽힌 값이 없어서 확인하지 못했어요.");
             } else if (episode.reboundDetected()) {
-                lines.add("처치 기록 뒤 " + hours + "시간 안에 그래프 상단에 닿는 값이 읽혔어요.");
+                lines.add("처치 기록 뒤 " + hours + "시간 안에 " + episodeProperties.reboundGlucoseThreshold() + " mg/dL을 넘는 값이 읽혔어요.");
             } else {
-                lines.add("처치 기록 뒤 " + hours + "시간 동안 읽힌 구간에서는 그래프 상단에 닿는 값이 없었어요.");
+                lines.add("처치 기록 뒤 " + hours + "시간 동안 읽힌 구간에서는 " + episodeProperties.reboundGlucoseThreshold() + " mg/dL을 넘는 값이 없었어요.");
             }
         }
         return lines;

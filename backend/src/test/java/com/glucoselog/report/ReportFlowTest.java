@@ -164,7 +164,7 @@ class ReportFlowTest {
         assertThat(summary).contains(
                 "이 날 혈당 그래프는 50%만 읽혔어요. 읽힌 구간만 보여드려요.",
                 "18:00 저혈당 처치 기록이 있어요.",
-                "처치 기록 뒤 2시간 안에 그래프 상단에 닿는 값이 읽혔어요.");
+                "처치 기록 뒤 2시간 안에 180 mg/dL을 넘는 값이 읽혔어요.");
 
         assertThat(body.get("insulin_events_count")).isEqualTo(1);
         List<Map<String, Object>> insulinEvents = (List<Map<String, Object>>) body.get("insulin_events");
@@ -253,7 +253,7 @@ class ReportFlowTest {
         assertThat(days.get(0).get("status")).isEqualTo("LOW_COVERAGE");
         List<Map<String, Object>> episodes = (List<Map<String, Object>>) days.get(0).get("episodes");
         assertThat(episodes.get(0).get("entered_context")).isEqualTo("SNACK");
-        assertThat(episodes.get(0).get("above_range_observed")).isEqualTo(true);
+        assertThat(episodes.get(0).get("above_rebound_threshold_observed")).isEqualTo(true);
     }
 
     @Test
